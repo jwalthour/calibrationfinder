@@ -2,6 +2,7 @@
 print('Importing')
 import cv2
 import cv2.aruco
+import numpy as np
 
 def find_markers(image, marker_dict=None):
     """
@@ -21,14 +22,15 @@ def find_markers(image, marker_dict=None):
     markers = {}
     for i in range(0, len(ids)):
         # print(str(i) + ": corners[i]: " + repr(corners[i]))
-        # "Grow" the aruco marker frame by 25%, which is the width of the margin of dots
-        vector_ul_lr = corners[i][0][2] - corners[i][0][0]
         # print(str(i) + ": vector_ul_lr: " + repr(vector_ul_lr))
         # print(str(i) + ": 0.25 * vector_ul_lr: " + repr(0.25 * vector_ul_lr))
         # print(str(i) + ": corners[i][0][2] + 0.25 * vector_ul_lr: " + repr(corners[i][0][2] + 0.25 * vector_ul_lr))
-        grown_box = corners[i][0][2] + 0.25 * vector_ul_lr
+        # Compute a box 25% wider in every dimension.
+        # I sorted this out in longform and then condensed it.  Sorry.
+        grown_box = np.array([corners[i][0][(c + 2) % 4] + 0.25 * (corners[i][0][(c + 2) % 4] - corners[i][0][c]) for c in range(0,4)], dtype=np.int32)
         print(str(i) + ": grown_box: " + repr(grown_box))
-        
+        poly_pts = grown_box.reshape((-1,1,2))
+        cv2.polylines(markedup, [poly_pts], True, (0,255,0))
     # For debugging, we're just gonna return a marked up image for now 
     return markedup
 
