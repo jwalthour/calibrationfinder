@@ -1,0 +1,2 @@
+- Install Raspbian buster lite
+- run `sudo apt update; sudo apt -y install python3-opencv`
