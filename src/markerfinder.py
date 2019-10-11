@@ -28,11 +28,17 @@ def find_markers(image, marker_dict=None):
         # Compute a box 25% wider in every dimension.
         # I sorted this out in longform and then condensed it.  Sorry.
         grown_box = np.array([corners[i][0][(c + 2) % 4] + 0.25 * (corners[i][0][(c + 2) % 4] - corners[i][0][c]) for c in range(0,4)], dtype=np.int32)
-        print(str(i) + ": grown_box: " + repr(grown_box))
+        # print(str(i) + ": grown_box: " + repr(grown_box))
         poly_pts = grown_box.reshape((-1,1,2))
+        
+        # Create a mask that will select just the dots
+        mask = np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
+        cv2.fillConvexPoly(mask, poly_pts, 1, 0)
+        cv2.fillConvexPoly(mask, corners[i].astype(np.int32), 0, 0)
+        masked = cv2.bitwise_and(image, image, mask=mask)
         cv2.polylines(markedup, [poly_pts], True, (0,255,0))
     # For debugging, we're just gonna return a marked up image for now 
-    return markedup
+    return masked
 
 
 if __name__ == '__main__':
