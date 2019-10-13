@@ -19,7 +19,7 @@ class Markerfinder:
          
         # Change thresholds
         self._params.minThreshold = 0;
-        self._params.maxThreshold = 255;
+        self._params.maxThreshold = 32;
          
         # Filter by Area.
         self._params.filterByArea = True
@@ -27,15 +27,16 @@ class Markerfinder:
          
         # Filter by Circularity
         self._params.filterByCircularity = True
-        self._params.minCircularity = 0.5
+        self._params.minCircularity = 0.25
          
         # Filter by Convexity
         self._params.filterByConvexity = True
-        self._params.minConvexity = 0.5
+        self._params.minConvexity = 0.9
+        self._params.maxConvexity = 1
          
         # Filter by Inertia
         self._params.filterByInertia = True
-        self._params.minInertiaRatio = 0.01
+        self._params.minInertiaRatio = 0.5
          
         # Create a detector with the parameters
         self._dot_detector = cv2.SimpleBlobDetector_create(self._params)
@@ -82,7 +83,7 @@ class Markerfinder:
         
         """
         blobs = self._dot_detector.detect(masked_image)
-        print("blobs: " + repr(blobs))
+        print("Found "+str(len(blobs))+" blobs. ")
         # Draw detected blobs as red circles.
         # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
         return cv2.drawKeypoints(masked_image, blobs, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
