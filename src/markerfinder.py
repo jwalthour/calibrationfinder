@@ -73,20 +73,22 @@ class Markerfinder:
             masked = cv2.bitwise_and(image, image, mask=mask)
             cv2.polylines(markedup, [poly_pts], True, (0,255,0))
             
-            masked = self._get_dots(masked)
+            dots = self._get_dots(masked)
+            print("Dots at: " + repr(dots))
         # For debugging, we're just gonna return a marked up image for now 
         return masked
 
     def _get_dots(self, masked_image):
         """
         Locates dot centerpoints in image.  Assumes image is masked down to just one marker's worth of dots.
-        
+        returns : list of twoples, representing (x,y) coordinates in image of the 
         """
         blobs = self._dot_detector.detect(masked_image)
         print("Found "+str(len(blobs))+" blobs. ")
         # Draw detected blobs as red circles.
         # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
-        return cv2.drawKeypoints(masked_image, blobs, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        # return cv2.drawKeypoints(masked_image, blobs, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        return [blob.pt for blob in blobs]
         
 
 if __name__ == '__main__':
