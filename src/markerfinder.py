@@ -40,7 +40,29 @@ class Markerfinder:
          
         # Create a detector with the parameters
         self._dot_detector = cv2.SimpleBlobDetector_create(self._params)
-
+        
+        # Set up the calibration pattern 
+        self.CAL_PATTERN_DIMS = (8, 8)  # in dots
+        self.CAL_DOT_SPACING = (25.8, 25.8)  # in mm
+        self._IMAGE_SIZE = (800,600)  # in px
+        self._cal_3space_pattern = []
+        for x in range(0, self.CAL_PATTERN_DIMS[0]):
+            for y in range(0, self.CAL_PATTERN_DIMS[1]):
+                self._cal_3space_pattern += [(x * self.CAL_DOT_SPACING[0], y * self.CAL_DOT_SPACING[1], 0)]
+    
+    def find_single_cam_calibration(self, images):
+        """
+        images : list of images
+        """
+        all_points_in_images = []
+        all_points_in_3space = []
+        for img in images:
+            found,points = cv2.findCirclesGridDefault(self.CAL_PATTERN_DIMS)
+            all_points_in_images += [points]
+            all_points_in_3space += [self._cal_3space_pattern]
+        found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE)
+        
+        return cameraMatrix
 
     def find_markers(self, image):
         """
@@ -93,6 +115,10 @@ class Markerfinder:
 
 if __name__ == '__main__':
     mf = Markerfinder();
+    left_cal_images  = ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']
+    right_cal_images = ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']
+    lcal = mf.find_single_cam_calibration(left_cal_images)
+    rcal = mf.find_single_cam_calibration(right_cal_images)
     img = cv2.imread('test images/7 markers on a printout.jpg')
     print('Processing')
     debug_img = mf.find_markers(img)
