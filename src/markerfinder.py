@@ -49,19 +49,29 @@ class Markerfinder:
         for x in range(0, self.CAL_PATTERN_DIMS[0]):
             for y in range(0, self.CAL_PATTERN_DIMS[1]):
                 self._cal_3space_pattern += [(x * self.CAL_DOT_SPACING[0], y * self.CAL_DOT_SPACING[1], 0)]
+        self._cal_3space_pattern
     
-    def find_single_cam_calibration(self, images):
+    def find_single_cam_calibration(self, image_paths):
         """
-        images : list of images
+        images : list of image file paths
         """
         all_points_in_images = []
         all_points_in_3space = []
-        for img in images:
-            found,points = cv2.findCirclesGridDefault(self.CAL_PATTERN_DIMS)
-            all_points_in_images += [points]
-            all_points_in_3space += [self._cal_3space_pattern]
-        found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE)
+        cameraMatrix = np.array([[]])
+        distCoeffs = np.array([])
         
+        for image_path in image_paths:
+            img = cv2.imread(image_path)
+            # print("img : " + repr(img))
+            found,points = cv2.findCirclesGrid(img, self.CAL_PATTERN_DIMS)
+            print(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
+            if found:
+                all_points_in_images += [points]
+                all_points_in_3space += [self._cal_3space_pattern]
+        if len(all_points_in_3space) > 0:
+            # print("np.array(all_points_in_3space) = " + repr(np.array(all_points_in_3space)))
+            print("all_points_in_3space = " + str(all_points_in_3space))
+            found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, cameraMatrix, distCoeffs)
         return cameraMatrix
 
     def find_markers(self, image):
@@ -115,8 +125,9 @@ class Markerfinder:
 
 if __name__ == '__main__':
     mf = Markerfinder();
-    left_cal_images  = ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']
-    right_cal_images = ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']
+    cal_img_dir = 'test images/2019-10-13 stereo cal images/'
+    left_cal_images  = [cal_img_dir + fn for fn in ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']]
+    right_cal_images = [cal_img_dir + fn for fn in ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']]
     lcal = mf.find_single_cam_calibration(left_cal_images)
     rcal = mf.find_single_cam_calibration(right_cal_images)
     img = cv2.imread('test images/7 markers on a printout.jpg')
