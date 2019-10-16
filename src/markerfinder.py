@@ -70,6 +70,7 @@ class Markerfinder:
                 all_points_in_3space += [self._cal_3space_pattern]
         if len(all_points_in_3space) > 0:
             # print("np.array(all_points_in_3space) = " + repr(np.array(all_points_in_3space)))
+            all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
             print("all_points_in_3space = " + str(all_points_in_3space))
             found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, cameraMatrix, distCoeffs)
         return cameraMatrix
