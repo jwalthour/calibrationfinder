@@ -55,11 +55,18 @@ class Markerfinder:
         """
         images : list of image file paths
         """
+        all_points_in_3space, all_points_in_images = _find_point_vectors(image_paths)
+        if len(all_points_in_3space) > 0:
+            # print("np.array(all_points_in_3space) = " + repr(np.array(all_points_in_3space)))
+            all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
+            # print("all_points_in_3space = " + str(all_points_in_3space))
+            found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, cameraMatrix, distCoeffs)
+            # print("found: " + repr(found) + ",\n cameraMatrix: " + repr(cameraMatrix) + ",\n distCoeffs: " + repr(distCoeffs) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
+        return cameraMatrix,distCoeffs
+    
+    def _find_point_vectors(self, image_paths):
         all_points_in_images = []
         all_points_in_3space = []
-        cameraMatrix = np.array([[]])
-        distCoeffs = np.array([])
-        
         for image_path in image_paths:
             img = cv2.imread(image_path)
             # print("img : " + repr(img))
@@ -68,12 +75,16 @@ class Markerfinder:
             if found:
                 all_points_in_images += [points]
                 all_points_in_3space += [self._cal_3space_pattern]
-        if len(all_points_in_3space) > 0:
-            # print("np.array(all_points_in_3space) = " + repr(np.array(all_points_in_3space)))
-            all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
-            print("all_points_in_3space = " + str(all_points_in_3space))
-            found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, cameraMatrix, distCoeffs)
-        return cameraMatrix
+        return all_points_in_3space, all_points_in_images
+    
+    def find_stereo_pair_calibration(self, left_image_paths, right_image_paths):
+        # lCameraMatrix, lDistCoeffs = mf.find_single_cam_calibration(left_image_paths)
+        # rCameraMatrix, rDistCoeffs = mf.find_single_cam_calibration(right_image_paths)
+        all_points_in_3space, all_points_in_left_images = self._find_point_vectors(left_image_paths)
+        all_points_in_3space, all_points_in_right_images = self._find_point_vectors(right_image_paths)
+        all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
+        retval, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, self._IMAGE_SIZE, np.array([]), np.array([[]]), np.array([]), np.array([[]]))
+        
 
     def find_markers(self, image):
         """
@@ -107,7 +118,7 @@ class Markerfinder:
             cv2.polylines(markedup, [poly_pts], True, (0,255,0))
             
             dots = self._get_dots(masked)
-            print("Dots at: " + repr(dots))
+            # print("Dots at: " + repr(dots))
         # For debugging, we're just gonna return a marked up image for now 
         return masked
 
@@ -129,11 +140,10 @@ if __name__ == '__main__':
     cal_img_dir = 'test images/2019-10-13 stereo cal images/'
     left_cal_images  = [cal_img_dir + fn for fn in ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']]
     right_cal_images = [cal_img_dir + fn for fn in ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']]
-    lcal = mf.find_single_cam_calibration(left_cal_images)
-    rcal = mf.find_single_cam_calibration(right_cal_images)
-    img = cv2.imread('test images/7 markers on a printout.jpg')
-    print('Processing')
-    debug_img = mf.find_markers(img)
-    print('Saving')
-    cv2.imwrite('test.png', debug_img)
+    mf.find_stereo_pair_calibration(left_cal_images, right_cal_images)
+    # img = cv2.imread('test images/7 markers on a printout.jpg')
+    # print('Processing')
+    # debug_img = mf.find_markers(img)
+    # print('Saving')
+    # cv2.imwrite('test.png', debug_img)
     
