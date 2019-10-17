@@ -151,7 +151,7 @@ class Markerfinder:
 if __name__ == '__main__':
     mf = Markerfinder();
     cal_img_dir = 'test images/2019-10-13 stereo cal images/'
-    left_cal_images  = [cal_img_dir + fn for fn in ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']]
+    left_cal_images  = [cal_img_dir + fn for fn in ['0l.jpg', '1l.jpg', '2l.jpg', '3l.jpg', '4l.jpg', '5l.jpg']]
     right_cal_images = [cal_img_dir + fn for fn in ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']]
     mf.find_stereo_pair_calibration(left_cal_images, right_cal_images)
     # img = cv2.imread('test images/7 markers on a printout.jpg')
