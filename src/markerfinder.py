@@ -83,7 +83,11 @@ class Markerfinder:
         all_points_in_3space, all_points_in_left_images = self._find_point_vectors(left_image_paths)
         all_points_in_3space, all_points_in_right_images = self._find_point_vectors(right_image_paths)
         all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
-        retval, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, self._IMAGE_SIZE, np.array([]), np.array([[]]), np.array([]), np.array([[]]))
+        print("all_points_in_3space: " + repr(all_points_in_3space))
+        print("all_points_in_left_images: " + repr(all_points_in_left_images))
+        print("all_points_in_right_images: " + repr(all_points_in_right_images))
+        print("self._IMAGE_SIZE: " + repr(self._IMAGE_SIZE))
+        retval, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, np.array([]), np.array([[]]), np.array([]), np.array([[]]), self._IMAGE_SIZE)
         
 
     def find_markers(self, image):
