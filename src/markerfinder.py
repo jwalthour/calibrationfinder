@@ -23,7 +23,7 @@ class Markerfinder:
          
         # Filter by Area.
         self._params.filterByArea = True
-        self._params.minArea = 100
+        self._params.minArea = 5
          
         # Filter by Circularity
         self._params.filterByCircularity = True
@@ -37,6 +37,10 @@ class Markerfinder:
         # Filter by Inertia
         self._params.filterByInertia = True
         self._params.minInertiaRatio = 0.5
+        
+        print("Orig minDistBetweenBlobs: " + str(self._params.minDistBetweenBlobs))
+        self._params.minDistBetweenBlobs = 1
+        self._params.blobColor = 0
          
         # Create a detector with the parameters
         self._dot_detector = cv2.SimpleBlobDetector_create(self._params)
@@ -70,7 +74,8 @@ class Markerfinder:
         for image_path in image_paths:
             img = cv2.imread(image_path)
             # print("img : " + repr(img))
-            found,points = cv2.findCirclesGrid(img, self.CAL_PATTERN_DIMS)
+            points = np.array([[]])
+            found,points = cv2.findCirclesGrid(img, self.CAL_PATTERN_DIMS, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._dot_detector)
             print(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
             if found:
                 all_points_in_images += [points]
@@ -146,13 +151,65 @@ class Markerfinder:
         # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
         # return cv2.drawKeypoints(masked_image, blobs, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
         return [blob.pt for blob in blobs]
-        
+
+def make_detector():
+    # Setup SimpleBlobDetector parameters.
+    parms = cv2.SimpleBlobDetector_Params()
+     
+    # Change thresholds
+    parms.minThreshold = 0;
+    parms.maxThreshold = 128;
+     
+    # Filter by Area.
+    parms.filterByArea = True
+    parms.minArea = 1
+     
+    # Filter by Circularity
+    parms.filterByCircularity = True
+    parms.minCircularity = 0.25
+     
+    # Filter by Convexity
+    parms.filterByConvexity = True
+    parms.minConvexity = 0.9
+    parms.maxConvexity = 1
+     
+    # Filter by Inertia
+    parms.filterByInertia = True
+    parms.minInertiaRatio = 0.5
+    
+    print("Orig minDistBetweenBlobs: " + str(parms.minDistBetweenBlobs))
+    parms.minDistBetweenBlobs = 1
+    parms.blobColor = 0
+     
+    # Create a detector with the parameters
+    return cv2.SimpleBlobDetector_create(parms)
+
+
+def mark_dots(infilepath, outfilepath, detector):
+    """
+    Test routine for debugging blob finder params
+    """
+    
+    image = cv2.imread(infilepath)
+    blobs = detector.detect(image)
+    print("Found "+str(len(blobs))+" blobs " + infilepath + " -> " + outfilepath)
+    # Draw detected blobs as red circles.
+    # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
+    annotated = cv2.drawKeypoints(image, blobs, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    cv2.imwrite(outfilepath, annotated)
 
 if __name__ == '__main__':
     mf = Markerfinder();
     cal_img_dir = 'test images/2019-10-13 stereo cal images/'
-    left_cal_images  = [cal_img_dir + fn for fn in ['0l.jpg', '1l.jpg', '2l.jpg', '3l.jpg', '4l.jpg', '5l.jpg']]
-    right_cal_images = [cal_img_dir + fn for fn in ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']]
+    left_image_names  = ['0l.jpg', '1l.jpg', '2l.jpg', '3l.jpg', '4l.jpg', '5l.jpg']
+    right_image_names = ['0r.jpg', '1r.jpg', '2r.jpg', '3r.jpg', '4r.jpg', '5r.jpg']
+    left_cal_images  = [cal_img_dir + fn for fn in left_image_names ]
+    right_cal_images = [cal_img_dir + fn for fn in right_image_names]
+    all_images = left_image_names + right_image_names
+    det = make_detector()
+    for img in all_images:
+        outfile = 'dotted_' + img;
+        mark_dots(cal_img_dir + img, cal_img_dir + outfile, det)
     mf.find_stereo_pair_calibration(left_cal_images, right_cal_images)
     # img = cv2.imread('test images/7 markers on a printout.jpg')
     # print('Processing')
