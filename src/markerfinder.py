@@ -4,6 +4,38 @@ import cv2
 import cv2.aruco
 import numpy as np
 
+def make_detector():
+    # Setup SimpleBlobDetector parameters.
+    parms = cv2.SimpleBlobDetector_Params()
+     
+    # Change thresholds
+    parms.minThreshold = 0;
+    parms.maxThreshold = 128;
+     
+    # Filter by Area.
+    parms.filterByArea = True
+    parms.minArea = 5
+     
+    # Filter by Circularity
+    parms.filterByCircularity = True
+    parms.minCircularity = 0.25
+     
+    # Filter by Convexity
+    parms.filterByConvexity = False
+    parms.minConvexity = 0.9
+    parms.maxConvexity = 1
+     
+    # Filter by Inertia
+    parms.filterByInertia = True
+    parms.minInertiaRatio = 0.5
+    
+    print("Orig minDistBetweenBlobs: " + str(parms.minDistBetweenBlobs))
+    parms.minDistBetweenBlobs = 5
+    parms.blobColor = 0
+     
+    # Create a detector with the parameters
+    return cv2.SimpleBlobDetector_create(parms)
+
 class Markerfinder:
     def __init__(self, marker_dict=None):
         """
@@ -45,6 +77,8 @@ class Markerfinder:
         # Create a detector with the parameters
         self._dot_detector = cv2.SimpleBlobDetector_create(self._params)
         
+        self._cal_target_dot_det = make_detector()
+        
         # Set up the calibration pattern 
         self.CAL_PATTERN_DIMS = (8, 8)  # in dots
         self.CAL_DOT_SPACING = (25.8, 25.8)  # in mm
@@ -75,7 +109,7 @@ class Markerfinder:
             img = cv2.imread(image_path)
             # print("img : " + repr(img))
             points = np.array([[]])
-            found,points = cv2.findCirclesGrid(img, self.CAL_PATTERN_DIMS, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._dot_detector)
+            found,points = cv2.findCirclesGrid(img, self.CAL_PATTERN_DIMS, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._cal_target_dot_det)
             print(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
             if found:
                 all_points_in_images += [points]
@@ -151,38 +185,6 @@ class Markerfinder:
         # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
         # return cv2.drawKeypoints(masked_image, blobs, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
         return [blob.pt for blob in blobs]
-
-def make_detector():
-    # Setup SimpleBlobDetector parameters.
-    parms = cv2.SimpleBlobDetector_Params()
-     
-    # Change thresholds
-    parms.minThreshold = 0;
-    parms.maxThreshold = 128;
-     
-    # Filter by Area.
-    parms.filterByArea = True
-    parms.minArea = 5
-     
-    # Filter by Circularity
-    parms.filterByCircularity = True
-    parms.minCircularity = 0.25
-     
-    # Filter by Convexity
-    parms.filterByConvexity = False
-    parms.minConvexity = 0.9
-    parms.maxConvexity = 1
-     
-    # Filter by Inertia
-    parms.filterByInertia = True
-    parms.minInertiaRatio = 0.5
-    
-    print("Orig minDistBetweenBlobs: " + str(parms.minDistBetweenBlobs))
-    parms.minDistBetweenBlobs = 5
-    parms.blobColor = 0
-     
-    # Create a detector with the parameters
-    return cv2.SimpleBlobDetector_create(parms)
 
 
 def mark_dots(infilepath, outfilepath, detector):
