@@ -93,12 +93,12 @@ class Markerfinder:
         """
         images : list of image file paths
         """
-        all_points_in_3space, all_points_in_images = _find_point_vectors(image_paths)
+        all_points_in_3space, all_points_in_images = self._find_point_vectors(image_paths)
         if len(all_points_in_3space) > 0:
             # print("np.array(all_points_in_3space) = " + repr(np.array(all_points_in_3space)))
             all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
             # print("all_points_in_3space = " + str(all_points_in_3space))
-            found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, cameraMatrix, distCoeffs)
+            found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, np.array([]), np.array([]))
             # print("found: " + repr(found) + ",\n cameraMatrix: " + repr(cameraMatrix) + ",\n distCoeffs: " + repr(distCoeffs) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
         return cameraMatrix,distCoeffs
     
@@ -117,8 +117,8 @@ class Markerfinder:
         return all_points_in_3space, all_points_in_images
     
     def find_stereo_pair_calibration(self, left_image_paths, right_image_paths):
-        # lCameraMatrix, lDistCoeffs = mf.find_single_cam_calibration(left_image_paths)
-        # rCameraMatrix, rDistCoeffs = mf.find_single_cam_calibration(right_image_paths)
+        lCameraMatrix, lDistCoeffs = mf.find_single_cam_calibration(left_image_paths)
+        rCameraMatrix, rDistCoeffs = mf.find_single_cam_calibration(right_image_paths)
         all_points_in_3space, all_points_in_left_images = self._find_point_vectors(left_image_paths)
         all_points_in_3space, all_points_in_right_images = self._find_point_vectors(right_image_paths)
         all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
@@ -126,7 +126,7 @@ class Markerfinder:
         # print("all_points_in_left_images: " + repr(all_points_in_left_images))
         # print("all_points_in_right_images: " + repr(all_points_in_right_images))
         # print("self._IMAGE_SIZE: " + repr(self._IMAGE_SIZE))
-        retval, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, np.array([]), np.array([[]]), np.array([]), np.array([[]]), self._IMAGE_SIZE)
+        retval, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE)
         print("retval: " + repr(retval))
         print("lCameraMatrix: " + repr(lCameraMatrix))
         print("lDistCoeffs: " + repr(lDistCoeffs))
