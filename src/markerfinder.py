@@ -162,14 +162,14 @@ def make_detector():
      
     # Filter by Area.
     parms.filterByArea = True
-    parms.minArea = 1
+    parms.minArea = 5
      
     # Filter by Circularity
     parms.filterByCircularity = True
     parms.minCircularity = 0.25
      
     # Filter by Convexity
-    parms.filterByConvexity = True
+    parms.filterByConvexity = False
     parms.minConvexity = 0.9
     parms.maxConvexity = 1
      
@@ -178,7 +178,7 @@ def make_detector():
     parms.minInertiaRatio = 0.5
     
     print("Orig minDistBetweenBlobs: " + str(parms.minDistBetweenBlobs))
-    parms.minDistBetweenBlobs = 1
+    parms.minDistBetweenBlobs = 5
     parms.blobColor = 0
      
     # Create a detector with the parameters
