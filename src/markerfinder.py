@@ -140,6 +140,9 @@ class Markerfinder:
         # print("all_points_in_left_images: " + repr(all_points_in_left_images))
         # print("all_points_in_right_images: " + repr(all_points_in_right_images))
         # print("self._IMAGE_SIZE: " + repr(self._IMAGE_SIZE))
+        print("len(all_points_in_3space): " + str(len(all_points_in_3space)))
+        print("len(all_points_in_left_images): " + str(len(all_points_in_left_images)))
+        print("len(all_points_in_right_images): " + str(len(all_points_in_right_images)))
         retval, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE)
         print("retval: " + repr(retval))
         print("lCameraMatrix: " + repr(lCameraMatrix))
@@ -224,7 +227,7 @@ if __name__ == '__main__':
         'left/left-00004.png',
         'left/left-00005.png',
         'left/left-00006.png',
-        'left/left-00007.png',
+        # 'left/left-00007.png',
         # 'left/left-00008.png',
         # 'left/left-00009.png',
         'left/left-00010.png',
@@ -270,7 +273,7 @@ if __name__ == '__main__':
         ('left/left-00004.png','right/right-00004.png'),
         ('left/left-00005.png','right/right-00005.png'),
         ('left/left-00006.png','right/right-00006.png'),
-        ('left/left-00007.png','right/right-00007.png'),
+        # ('left/left-00007.png','right/right-00007.png'),
         # ('left/left-00008.png','right/right-00008.png'),
         # ('left/left-00009.png','right/right-00009.png'),
         ('left/left-00010.png','right/right-00010.png'),
