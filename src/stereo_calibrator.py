@@ -14,13 +14,13 @@ class StereoCalibrator:
         
         # Set up the calibration pattern 
         self.CAL_PATTERN_DIMS = (8, 8)  # in dots
-        self.CAL_DOT_SPACING_MM = (25.8, 25.8)  # in mm
+        self.CAL_DOT_SPACING_MM = (25.877, 25.877)  # in mm
         self._IMAGE_SIZE = (800,600)  # in px
         self._cal_3space_pattern = []
         for x in range(0, self.CAL_PATTERN_DIMS[0]):
             for y in range(0, self.CAL_PATTERN_DIMS[1]):
                 self._cal_3space_pattern += [(x * self.CAL_DOT_SPACING_MM[0], y * self.CAL_DOT_SPACING_MM[1], 0)]
-        self._cal_3space_pattern
+        logger.debug("self._cal_3space_pattern: " + repr(self._cal_3space_pattern))
     
     def make_detector(self):
         # Setup SimpleBlobDetector parameters.
@@ -47,7 +47,7 @@ class StereoCalibrator:
         parms.filterByInertia = True
         parms.minInertiaRatio = 0.5
         
-        logger.debug("Orig minDistBetweenBlobs: " + str(parms.minDistBetweenBlobs))
+        # logger.debug("Orig minDistBetweenBlobs: " + str(parms.minDistBetweenBlobs))
         parms.minDistBetweenBlobs = 5
         parms.blobColor = 0
          
@@ -65,6 +65,7 @@ class StereoCalibrator:
             # logger.debug("all_points_in_3space = " + str(all_points_in_3space))
             found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, np.array([]), np.array([]))
             # logger.debug("found: " + repr(found) + ",\n cameraMatrix: " + repr(cameraMatrix) + ",\n distCoeffs: " + repr(distCoeffs) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
+            logger.debug("found: " + repr(found) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
         return cameraMatrix,distCoeffs
     
     def _find_point_vectors(self, image_paths):
@@ -103,8 +104,10 @@ class StereoCalibrator:
         # First must calibrate individual cameras
         logger.info("Computing left camera calibration")
         lCameraMatrix, lDistCoeffs = self.find_single_cam_calibration(left_image_paths)
+        logger.info("lCameraMatrix: " + repr(lCameraMatrix))
         logger.info("Computing right camera calibration")
         rCameraMatrix, rDistCoeffs = self.find_single_cam_calibration(right_image_paths)
+        logger.info("rCameraMatrix: " + repr(rCameraMatrix))
         
         # redefine these 
         left_image_paths = [pair[0] for pair in pair_cal_images]
@@ -161,7 +164,7 @@ def mark_dots(infilepath, outfilepath, detector):
     cv2.imwrite(outfilepath, annotated)
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     sc = StereoCalibrator();
     cal_img_dir = 'test images/2019-10-18 stereo cal images/'
