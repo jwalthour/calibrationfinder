@@ -1,0 +1,29 @@
+From: https://answers.opencv.org/question/139166
+Fx = fx * W /w
+
+where:
+
+    W: is the sensor width expressed in world units, let's say mm
+    w: is the image width expressed in pixel
+    fx: is the focal length expressed in pixel units (as is in the camera matrix )
+    Fx: is the focal length expressed in real-world units
+
+Therefore also:
+W * fx = w * Fx
+W = w * Fx / fx
+
+First calibration came up with fx = 1595, fy = 1554.  Image is 800x600, and camera doc says lens focal length is 4.4mm.  It describes the sensor as just "1/4 inch".  Presumably that's the diagonal, and is only at one significant figure.
+
+So sensor dimensions are:
+   W = 800px * 4.4mm / 1595px = 2.2mm
+   H = 600px * 4.4mm / 1554px = 1.7mm
+and there is no way that's right.
+
+What are reasonable values to expect for fx and fy?  Say we have a rectangular sensor with square elements (thus an 800:600 aspect ratio) and a 1/4" diagonal.  So this is a 3:4:5 triangle, so its dimensions are 0.25"*4/5 wide by 0.25"*3/5 tall = 5.08mm x 3.81mm, so each pixel is 6.35um square.  So the focal length would be 692.91 in each axis.  So we're off by a factor of like 2.2 to 2.3.
+
+Waaaaait - this is a color sensor.  So it has some pattern in front of it.  Some pattern that probably translates a 2x2 pixel square into one single pixel in the image.
+
+So true physical dimensions are:
+   W = 800*2px * 4.4mm / 1595px = 4.4mm
+   H = 600*2px * 4.4mm / 1554px = 3.4mm
+Comes out to a diagonal of 5.57mm or 0.23", which I think is close enough by this estimation method.
