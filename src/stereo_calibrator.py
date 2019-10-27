@@ -111,8 +111,8 @@ class StereoCalibrator:
         logger.info("rCameraMatrix: " + repr(rCameraMatrix))
         
         # redefine these 
-        left_image_paths = [pair[0] for pair in pair_cal_images]
-        right_image_paths = [pair[1] for pair in pair_cal_images]
+        left_image_paths = [pair[0] for pair in pair_image_paths]
+        right_image_paths = [pair[1] for pair in pair_image_paths]
         
         # Find individual dots in all the images
         logger.info("Finding points in left images from pairs")
@@ -138,20 +138,55 @@ class StereoCalibrator:
         logger.debug("T: " + repr(T))
         logger.debug("E: " + repr(E))
         logger.debug("F: " + repr(F))
+        
+        # Compute projection matrices
+        #https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#stereorectify
+        leftRectXform  = np.array([[]]) #R1
+        rightRectXform = np.array([[]]) #R2
+        leftProjMat    = np.array([[]]) #P1
+        rightProjMat   = np.array([[]]) #P2
+        returned = cv2.stereoRectify(lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, R, T, leftRectXform, rightRectXform, leftProjMat, rightProjMat)
+        logger.debug("returned : " + repr(returned ))
+        logger.debug("leftRectXform : " + repr(leftRectXform ))
+        logger.debug("rightRectXform: " + repr(rightRectXform))
+        logger.debug("leftProjMat   : " + repr(leftProjMat   ))
+        logger.debug("rightProjMat  : " + repr(rightProjMat  ))
+
         retDict = {
-            'minError':minError,
-            'lCameraMatrix':lCameraMatrix,
-            'lDistCoeffs':lDistCoeffs,
-            'rCameraMatrix':rCameraMatrix,
-            'rDistCoeffs':rDistCoeffs,
-            'R':R,
-            'T':T,
-            'E':E,
-            'F':F,
+            'leftProjMat ':leftProjMat ,
+            'rightProjMat':rightProjMat,
         }
         
         return retDict
         
+    def find_cal_pattern_in_3space(self, stereo_cal, pair_image_paths):
+        """
+        stereo_cal:  The output from cv2.stereoCalibrate, stored in a dictionary like this:
+            {
+                'minError':minError,
+                'lCameraMatrix':lCameraMatrix,
+                'lDistCoeffs':lDistCoeffs,
+                'rCameraMatrix':rCameraMatrix,
+                'rDistCoeffs':rDistCoeffs,
+                'R':R,
+                'T':T,
+                'E':E,
+                'F':F,
+            }
+        pair_image_paths  : list of twoples, of the form ("/path/to/one/left/image", "/path/to/one/right/image"),
+        
+        returns: a list of coordinates in real-world space
+        """
+        left_image_paths = [pair[0] for pair in pair_image_paths]
+        right_image_paths = [pair[1] for pair in pair_image_paths]
+        
+        # Find individual dots in all the images
+        logger.info("Finding points in left images from pairs")
+        all_points_in_3space, all_points_in_left_images = self._find_point_vectors(left_image_paths)
+        logger.info("Finding points in right images from pairs")
+        all_points_in_3space, all_points_in_right_images = self._find_point_vectors(right_image_paths)
+        
+
 def mark_dots(infilepath, outfilepath, detector):
     """
     Test routine for debugging blob finder params
@@ -164,6 +199,7 @@ def mark_dots(infilepath, outfilepath, detector):
     annotated = cv2.drawKeypoints(image, blobs, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     cv2.imwrite(outfilepath, annotated)
 
+    
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
