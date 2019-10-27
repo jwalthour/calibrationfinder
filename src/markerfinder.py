@@ -155,7 +155,7 @@ class Markerfinder:
         print("F: " + repr(F))
         
 
-    def find_markers(self, image):
+    def find_markers_single_image(self, image):
         """
         Locates markers that consist of an aruco marker surrounded by 20 dots
         
@@ -189,7 +189,8 @@ class Markerfinder:
             dots = self._get_dots(masked)
             # print("Dots at: " + repr(dots))
         # For debugging, we're just gonna return a marked up image for now 
-        return masked
+        # return masked
+        return dots
 
     def _get_dots(self, masked_image):
         """
@@ -218,54 +219,9 @@ def mark_dots(infilepath, outfilepath, detector):
     cv2.imwrite(outfilepath, annotated)
 
 if __name__ == '__main__':
+    from stereo_cal import stereo_cal
     mf = Markerfinder();
-    cal_img_dir = 'test images/2019-10-18 stereo cal images/'
-    left_image_names  = [
-        'left/left-00001.png',
-        'left/left-00002.png',
-        'left/left-00003.png',
-        'left/left-00004.png',
-        'left/left-00005.png',
-        'left/left-00006.png',
-        # 'left/left-00007.png',
-        # 'left/left-00008.png',
-        # 'left/left-00009.png',
-        'left/left-00010.png',
-        'left/left-00011.png',
-        'left/left-00012.png',
-        'left/left-00013.png',
-        'left/left-00014.png',
-        'left/left-00015.png',
-        'left/left-00019.png',
-        # 'left/left-00020.png',
-        'left/left-00021.png',
-        'left/left-00022.png',
-        'left/left-00023.png',
-        'left/left-00025.png',
-    ]
-    right_image_names = [
-        'right/right-00001.png',
-        'right/right-00002.png',
-        # 'right/right-00003.png',
-        'right/right-00004.png',
-        'right/right-00005.png',
-        'right/right-00006.png',
-        'right/right-00007.png',
-        'right/right-00008.png',
-        'right/right-00009.png',
-        'right/right-00010.png',
-        'right/right-00011.png',
-        'right/right-00012.png',
-        'right/right-00013.png',
-        # 'right/right-00014.png',
-        # 'right/right-00015.png',
-        'right/right-00019.png',
-        'right/right-00020.png',
-        'right/right-00021.png',
-        'right/right-00022.png',
-        'right/right-00023.png',
-        # 'right/right-00025.png',
-    ]
+    marker_img_dir = 'test images/2019-10-18 stereo cal images/'
     pair_image_names = [
         ('left/left-00001.png','right/right-00001.png'),
         ('left/left-00002.png','right/right-00002.png'),
@@ -298,9 +254,5 @@ if __name__ == '__main__':
         outfile = 'dotted_' + img;
         mark_dots(cal_img_dir + img, cal_img_dir + outfile, det)
     mf.find_stereo_pair_calibration(left_cal_images, right_cal_images, pair_cal_images)
-    # img = cv2.imread('test images/7 markers on a printout.jpg')
-    # print('Processing')
-    # debug_img = mf.find_markers(img)
-    # print('Saving')
-    # cv2.imwrite('test.png', debug_img)
+    mf.find_markers_single_image(img)
     
