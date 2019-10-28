@@ -141,16 +141,14 @@ class StereoCalibrator:
         
         # Compute projection matrices
         #https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#stereorectify
-        leftRectXform  = np.array([[]]) #R1
-        rightRectXform = np.array([[]]) #R2
-        leftProjMat    = np.array([[]]) #P1
-        rightProjMat   = np.array([[]]) #P2
-        returned = cv2.stereoRectify(lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, R, T, leftRectXform, rightRectXform, leftProjMat, rightProjMat)
-        logger.debug("returned : " + repr(returned ))
+        (leftRectXform, rightRectXform, leftProjMat, rightProjMat, Q, leftRoi, rightRoi) = cv2.stereoRectify(lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, R, T)
         logger.debug("leftRectXform : " + repr(leftRectXform ))
         logger.debug("rightRectXform: " + repr(rightRectXform))
         logger.debug("leftProjMat   : " + repr(leftProjMat   ))
         logger.debug("rightProjMat  : " + repr(rightProjMat  ))
+        logger.debug("Q: " + repr(Q))
+        logger.debug("leftRoi: " + repr(leftRoi))
+        logger.debug("rightRoi: " + repr(rightRoi))
 
         retDict = {
             'leftProjMat ':leftProjMat ,
