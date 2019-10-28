@@ -20,7 +20,7 @@ class StereoCalibrator:
         for x in range(0, self.CAL_PATTERN_DIMS[0]):
             for y in range(0, self.CAL_PATTERN_DIMS[1]):
                 self._cal_3space_pattern += [(x * self.CAL_DOT_SPACING_MM[0], y * self.CAL_DOT_SPACING_MM[1], 0)]
-        logger.debug("self._cal_3space_pattern: " + repr(self._cal_3space_pattern))
+        # logger.debug("self._cal_3space_pattern: " + repr(self._cal_3space_pattern))
     
     def make_detector(self):
         # Setup SimpleBlobDetector parameters.
@@ -63,10 +63,10 @@ class StereoCalibrator:
             # logger.debug("np.array(all_points_in_3space) = " + repr(np.array(all_points_in_3space)))
             all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
             # logger.debug("all_points_in_3space = " + str(all_points_in_3space))
-            logger.debug("all_points_in_images = " + str(all_points_in_images))
+            # logger.debug("all_points_in_images = " + str(all_points_in_images))
             found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, np.array([[]]), np.array([]))
             # logger.debug("found: " + repr(found) + ",\n cameraMatrix: " + repr(cameraMatrix) + ",\n distCoeffs: " + repr(distCoeffs) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
-            logger.debug("found: " + repr(found) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
+            # logger.debug("found: " + repr(found) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
         return cameraMatrix,distCoeffs
     
     def _find_point_vectors(self, image_paths):
@@ -76,7 +76,7 @@ class StereoCalibrator:
             img = cv2.imread(image_path)
             points = np.array([[]])
             found,points = cv2.findCirclesGrid(img, self.CAL_PATTERN_DIMS, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._cal_target_dot_det)
-            logger.debug(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
+            # logger.debug(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
             if found:
                 all_points_in_images += [points]
                 all_points_in_3space += [self._cal_3space_pattern]
@@ -89,17 +89,10 @@ class StereoCalibrator:
         right_image_paths : list of strings, each of which is a path to an image from the right camera
         pair_image_paths  : list of twoples, of the form ("/path/to/one/left/image", "/path/to/one/right/image"),
         
-        returns : The output from cv2.stereoCalibrate, stored in a dictionary like this:
+        returns : Projection matrices for cv2.triangulatePoints, stored in a dictionary like this:
         {
-            'minError':minError,
-            'lCameraMatrix':lCameraMatrix,
-            'lDistCoeffs':lDistCoeffs,
-            'rCameraMatrix':rCameraMatrix,
-            'rDistCoeffs':rDistCoeffs,
-            'R':R,
-            'T':T,
-            'E':E,
-            'F':F,
+            'leftProjMat':leftProjMat ,
+            'rightProjMat':rightProjMat,
         }
         """
         # First must calibrate individual cameras
@@ -151,38 +144,40 @@ class StereoCalibrator:
         logger.debug("rightRoi: " + repr(rightRoi))
 
         retDict = {
-            'leftProjMat ':leftProjMat ,
+            'leftProjMat':leftProjMat ,
             'rightProjMat':rightProjMat,
         }
         
         return retDict
         
-    def find_cal_pattern_in_3space(self, stereo_cal, pair_image_paths):
+    def find_cal_pattern_in_3space(self, stereo_cal, pair_image_path):
         """
-        stereo_cal:  The output from cv2.stereoCalibrate, stored in a dictionary like this:
-            {
-                'minError':minError,
-                'lCameraMatrix':lCameraMatrix,
-                'lDistCoeffs':lDistCoeffs,
-                'rCameraMatrix':rCameraMatrix,
-                'rDistCoeffs':rDistCoeffs,
-                'R':R,
-                'T':T,
-                'E':E,
-                'F':F,
-            }
-        pair_image_paths  : list of twoples, of the form ("/path/to/one/left/image", "/path/to/one/right/image"),
+        stereo_cal:  Projection matrices for cv2.triangulatePoints, stored in a dictionary like this:
+        {
+            'leftProjMat':leftProjMat ,
+            'rightProjMat':rightProjMat,
+        }
+        pair_image_path  : a twople, of the form ("/path/to/one/left/image", "/path/to/one/right/image"),
         
         returns: a list of coordinates in real-world space
         """
-        left_image_paths = [pair[0] for pair in pair_image_paths]
-        right_image_paths = [pair[1] for pair in pair_image_paths]
         
         # Find individual dots in all the images
         logger.info("Finding points in left images from pairs")
-        all_points_in_3space, all_points_in_left_images = self._find_point_vectors(left_image_paths)
+        all_points_in_3space, all_points_in_left_images = self._find_point_vectors([pair_image_path[0]])
         logger.info("Finding points in right images from pairs")
-        all_points_in_3space, all_points_in_right_images = self._find_point_vectors(right_image_paths)
+        all_points_in_3space, all_points_in_right_images = self._find_point_vectors([pair_image_path[1]])
+        
+        all_points_in_left_images = all_points_in_left_images[0].transpose()
+        all_points_in_right_images = all_points_in_right_images[0].transpose()
+        
+        logger.debug('all_points_in_left_images: ' + repr(all_points_in_left_images))
+        
+        points4d = cv2.triangulatePoints(stereo_cal['leftProjMat'], stereo_cal['rightProjMat'], all_points_in_left_images, all_points_in_right_images)
+        points3d = cv2.convertPointsFromHomogeneous(points4d.transpose())
+        
+        logger.debug('points3d: ' + repr(points3d))
+        return points3d
         
 
 def mark_dots(infilepath, outfilepath, detector):
@@ -286,3 +281,6 @@ if __name__ == '__main__':
     with open(output_fn, 'w+') as outfile:
         outfile.write('from numpy import array\nstereo_cal = ' + repr(stereo_cal) + '\n')
     logger.info('Done, saved calibration to ' + output_fn)
+
+    # test
+    sc.find_cal_pattern_in_3space(stereo_cal, pair_cal_images[0])
