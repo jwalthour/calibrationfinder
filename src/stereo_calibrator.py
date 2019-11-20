@@ -56,7 +56,7 @@ class StereoCalibrator:
 
     def find_single_cam_calibration(self, image_paths):
         """
-        images : list of image file paths
+        image_paths : list of image file paths
         """
         all_points_in_3space, all_points_in_images = self._find_point_vectors(image_paths)
         if len(all_points_in_3space) > 0:
@@ -70,6 +70,10 @@ class StereoCalibrator:
         return cameraMatrix,distCoeffs
     
     def _find_point_vectors(self, image_paths):
+        """
+        image_paths : list of N image file paths
+        returns : (<list of N copies of self._cal_3space_pattern>, <list of lists of dot coordinates in images>)
+        """
         all_points_in_images = []
         all_points_in_3space = []
         for image_path in image_paths:
