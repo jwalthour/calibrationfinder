@@ -136,6 +136,17 @@ class StereoCalibrator:
         logger.debug("E: " + repr(E))
         logger.debug("F: " + repr(F))
         
+        # For debugging only
+        imageL = cv2.imread(left_image_paths[0])
+        imageR = cv2.imread(left_image_paths[1])
+        lUd = cv2.undistort(imageL, lCameraMatrix, lDistCoeffs)
+        rUd = cv2.undistort(imageR, rCameraMatrix, rDistCoeffs)
+        cv2.imshow('left', imageL)
+        cv2.imshow('right', imageR)
+        cv2.imshow('left undistorted', lUd)
+        cv2.imshow('right undistorted', rUd)
+        cv2.waitKey(10000)
+        
         # Compute projection matrices
         #https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#stereorectify
         (leftRectXform, rightRectXform, leftProjMat, rightProjMat, Q, leftRoi, rightRoi) = cv2.stereoRectify(lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, R, T)
