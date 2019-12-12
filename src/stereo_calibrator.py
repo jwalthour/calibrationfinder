@@ -69,6 +69,17 @@ class StereoCalibrator:
             # logger.debug("found: " + repr(found) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
         return cameraMatrix,distCoeffs
     
+    def _draw_points_on_image(self, image, points): 
+        """
+        Annotate an image with points for debugging
+        image : color opencv image
+        points : list of coordinates in image
+        """
+        RADIUS = 1
+        COLOR = (0,0,255)
+        for point in points:
+            cv2.circle(image, tuple(point[0]), RADIUS, COLOR, -1)
+    
     def _find_point_vectors(self, image_paths):
         """
         image_paths : list of N image file paths
@@ -76,6 +87,8 @@ class StereoCalibrator:
         """
         all_points_in_images = []
         all_points_in_3space = []
+        
+        first_loop = True
         for image_path in image_paths:
             img = cv2.imread(image_path)
             points = np.array([[]])
@@ -84,6 +97,13 @@ class StereoCalibrator:
             if found:
                 all_points_in_images += [points]
                 all_points_in_3space += [self._cal_3space_pattern]
+                
+                # For debugging only
+                if first_loop:
+                    first_loop = False
+                    self._draw_points_on_image(img, points)
+                    cv2.imwrite('imgPoints.png', img)
+        
         return all_points_in_3space, all_points_in_images
     
     def find_stereo_pair_calibration(self, left_image_paths, right_image_paths, pair_image_paths):
@@ -141,11 +161,13 @@ class StereoCalibrator:
         imageR = cv2.imread(left_image_paths[1])
         lUd = cv2.undistort(imageL, lCameraMatrix, lDistCoeffs)
         rUd = cv2.undistort(imageR, rCameraMatrix, rDistCoeffs)
-        cv2.imshow('left', imageL)
-        cv2.imshow('right', imageR)
-        cv2.imshow('left undistorted', lUd)
-        cv2.imshow('right undistorted', rUd)
-        cv2.waitKey(10000)
+        cv2.imwrite('lUd.png', lUd)
+        cv2.imwrite('rUd.png', rUd)
+        # cv2.imshow('left', imageL)
+        # cv2.imshow('right', imageR)
+        # cv2.imshow('left undistorted', lUd)
+        # cv2.imshow('right undistorted', rUd)
+        # cv2.waitKey(10000)
         
         # Compute projection matrices
         #https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#stereorectify
