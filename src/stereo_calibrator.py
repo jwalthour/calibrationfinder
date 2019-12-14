@@ -145,7 +145,7 @@ class StereoCalibrator:
         logger.debug("len(all_points_in_left_images): " + str(len(all_points_in_left_images)))
         logger.debug("len(all_points_in_right_images): " + str(len(all_points_in_right_images)))
         logger.info("Computing stereo calibration")
-        minError, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE)
+        minError, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, flags=cv2.CALIB_USE_INTRINSIC_GUESS)
         logger.debug("minError: " + repr(minError))
         logger.debug("lCameraMatrix: " + repr(lCameraMatrix))
         logger.debug("lDistCoeffs: " + repr(lDistCoeffs))
