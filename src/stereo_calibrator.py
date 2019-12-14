@@ -15,7 +15,7 @@ class StereoCalibrator:
         # Set up the calibration pattern 
         self.CAL_PATTERN_DIMS = (8, 8)  # in dots
         self.CAL_DOT_SPACING_MM = (25.877, 25.877)  # in mm
-        self._IMAGE_SIZE = (800,600)  # in px
+        self._IMAGE_SIZE = (600,800)  # in px
         self._cal_3space_pattern = []
         for x in range(0, self.CAL_PATTERN_DIMS[0]):
             for y in range(0, self.CAL_PATTERN_DIMS[1]):
