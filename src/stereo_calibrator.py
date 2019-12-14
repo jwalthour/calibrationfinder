@@ -181,6 +181,7 @@ class StereoCalibrator:
         logger.debug("rightRoi: " + repr(rightRoi))
 
         retDict = {
+            'minError':minError,
             'leftProjMat':leftProjMat ,
             'rightProjMat':rightProjMat,
         }
