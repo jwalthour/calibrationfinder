@@ -206,8 +206,13 @@ class StereoCalibrator:
         logger.info("Finding points in right images from pairs")
         all_points_in_3space, all_points_in_right_images = self._find_point_vectors([pair_image_path[1]])
         
-        all_points_in_left_images = all_points_in_left_images[0].transpose()
-        all_points_in_right_images = all_points_in_right_images[0].transpose()
+        # Switch from x,y to row,col
+        all_points_in_left_images = all_points_in_left_images[0]
+        all_points_in_left_images = all_points_in_left_images[:,:,[1,0]]
+        all_points_in_left_images = all_points_in_left_images.transpose()
+        all_points_in_right_images = all_points_in_right_images[0]
+        all_points_in_right_images = all_points_in_right_images[:,:,[1,0]]
+        all_points_in_right_images = all_points_in_right_images.transpose()
         
         logger.debug('all_points_in_left_images: ' + repr(all_points_in_left_images))
         
