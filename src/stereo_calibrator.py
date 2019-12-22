@@ -77,8 +77,12 @@ class StereoCalibrator:
         """
         RADIUS = 1
         COLOR = (0,0,255)
+        i = 0
         for point in points:
+            logger.debug("point: %s"%repr(point))
             cv2.circle(image, tuple(point[0]), RADIUS, COLOR, -1)
+            cv2.putText(image, '%d'%i, tuple(point[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.33, COLOR)
+            i += 1
     
     def _find_point_vectors(self, image_paths):
         """
@@ -98,11 +102,11 @@ class StereoCalibrator:
                 all_points_in_images += [points]
                 all_points_in_3space += [self._cal_3space_pattern]
                 
-                # For debugging only
-                if first_loop:
-                    first_loop = False
-                    self._draw_points_on_image(img, points)
-                    cv2.imwrite('imgPoints.png', img)
+                self._draw_points_on_image(img, points)
+                cv2.imshow(image_path, img)
+            else:
+                logger.warning("Didn't find calibration pattern in this image: %s"%image_path)
+        cv2.waitKey()
         
         return all_points_in_3space, all_points_in_images
     
