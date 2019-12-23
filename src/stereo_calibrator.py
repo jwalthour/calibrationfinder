@@ -179,11 +179,11 @@ class StereoCalibrator:
         rUd = cv2.undistort(imageR, rCameraMatrixUpdated, rDistCoeffsUpdated)
         # cv2.imwrite('lUd.png', lUd)
         # cv2.imwrite('rUd.png', rUd)
-        cv2.imshow('left', imageL)
-        cv2.imshow('right', imageR)
-        cv2.imshow('left undistorted', lUd)
-        cv2.imshow('right undistorted', rUd)
-        cv2.waitKey()
+        # cv2.imshow('left', imageL)
+        # cv2.imshow('right', imageR)
+        # cv2.imshow('left undistorted', lUd)
+        # cv2.imshow('right undistorted', rUd)
+        # cv2.waitKey()
         
         # Compute projection matrices
         #https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#stereorectify
@@ -222,12 +222,22 @@ class StereoCalibrator:
         logger.info("Finding points in right images from pairs")
         all_points_in_3space, all_points_in_right_images = self._find_point_vectors([pair_image_path[1]])
         
-        # Switch from x,y to row,col
+        for image_path,points in zip(pair_image_path, [all_points_in_left_images[0], all_points_in_right_images[0]]):
+            img = cv2.imread(image_path)
+            self._draw_points_on_image(img, points)
+            cv2.imshow(image_path, img)
+        # logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_left_images = all_points_in_left_images[0]
-        all_points_in_left_images = all_points_in_left_images[:,:,[1,0]]
-        all_points_in_left_images = all_points_in_left_images.transpose()
+        logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
+        all_points_in_left_images = all_points_in_left_images[:,0,:]
+        logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_right_images = all_points_in_right_images[0]
-        all_points_in_right_images = all_points_in_right_images[:,:,[1,0]]
+        all_points_in_right_images = all_points_in_right_images[:,0,:]
+        # Switch from x,y to row,col
+        # all_points_in_left_images = all_points_in_left_images[:,:,[1,0]]
+        # all_points_in_right_images = all_points_in_right_images[:,:,[1,0]]
+        all_points_in_left_images = all_points_in_left_images.transpose()
+        logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_right_images = all_points_in_right_images.transpose()
         
         logger.debug('all_points_in_left_images: ' + repr(all_points_in_left_images))
@@ -235,6 +245,7 @@ class StereoCalibrator:
         points4d = cv2.triangulatePoints(stereo_cal['leftProjMat'], stereo_cal['rightProjMat'], all_points_in_left_images, all_points_in_right_images)
         points3d = cv2.convertPointsFromHomogeneous(points4d.transpose())
         
+        logger.debug('points4d: ' + repr(points4d))
         logger.debug('points3d: ' + repr(points3d))
         return points3d
         
@@ -343,3 +354,4 @@ if __name__ == '__main__':
 
     # test
     sc.find_cal_pattern_in_3space(stereo_cal, pair_cal_images[0])
+    cv2.waitKey()
