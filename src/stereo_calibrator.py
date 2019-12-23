@@ -67,12 +67,12 @@ class StereoCalibrator:
             found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, np.array([[]]), np.array([]))
             
             # Debug by projecting the points in the calibration pattern onto the image
-            for img_path,points,rvec,tvec in zip(image_paths, all_points_in_3space, rvecs, tvecs):
-                img = cv2.imread(img_path)
-                imagePoints, jacobian = cv2.projectPoints(points, rvec, tvec, cameraMatrix, distCoeffs)
-                self._draw_points_on_image(img, imagePoints)
-                cv2.imshow('reprojected on %s'%img_path, img)
-                cv2.waitKey()
+            # for img_path,points,rvec,tvec in zip(image_paths, all_points_in_3space, rvecs, tvecs):
+                # img = cv2.imread(img_path)
+                # imagePoints, jacobian = cv2.projectPoints(points, rvec, tvec, cameraMatrix, distCoeffs)
+                # self._draw_points_on_image(img, imagePoints)
+                # cv2.imshow('reprojected on %s'%img_path, img)
+                # cv2.waitKey()
             
             # logger.debug("found: " + repr(found) + ",\n cameraMatrix: " + repr(cameraMatrix) + ",\n distCoeffs: " + repr(distCoeffs) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
             # logger.debug("found: " + repr(found) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
@@ -161,12 +161,12 @@ class StereoCalibrator:
         logger.debug("len(all_points_in_left_images): " + str(len(all_points_in_left_images)))
         logger.debug("len(all_points_in_right_images): " + str(len(all_points_in_right_images)))
         logger.info("Computing stereo calibration")
-        minError, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, flags=cv2.CALIB_USE_INTRINSIC_GUESS)
+        minError, lCameraMatrixUpdated, lDistCoeffsUpdated, rCameraMatrixUpdated, rDistCoeffsUpdated, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, flags=cv2.CALIB_FIX_INTRINSIC)
         logger.debug("minError: " + repr(minError))
-        logger.debug("lCameraMatrix: " + repr(lCameraMatrix))
-        logger.debug("lDistCoeffs: " + repr(lDistCoeffs))
-        logger.debug("rCameraMatrix: " + repr(rCameraMatrix))
-        logger.debug("rDistCoeffs: " + repr(rDistCoeffs))
+        logger.debug("lCameraMatrix: " + repr(lCameraMatrix) + " -> lCameraMatrixUpdated: " + repr(lCameraMatrixUpdated))
+        logger.debug("lDistCoeffs: " + repr(lDistCoeffs) + " -> lDistCoeffsUpdated: " + repr(lDistCoeffsUpdated))
+        logger.debug("rCameraMatrix: " + repr(rCameraMatrix) + " -> rCameraMatrixUpdated: " + repr(rCameraMatrixUpdated))
+        logger.debug("rDistCoeffs: " + repr(rDistCoeffs) + " -> rDistCoeffsUpdated: " + repr(rDistCoeffsUpdated))
         logger.debug("R: " + repr(R))
         logger.debug("T: " + repr(T))
         logger.debug("E: " + repr(E))
@@ -174,20 +174,20 @@ class StereoCalibrator:
         
         # For debugging only
         imageL = cv2.imread(left_image_paths[0])
-        imageR = cv2.imread(left_image_paths[1])
-        lUd = cv2.undistort(imageL, lCameraMatrix, lDistCoeffs)
-        rUd = cv2.undistort(imageR, rCameraMatrix, rDistCoeffs)
-        cv2.imwrite('lUd.png', lUd)
-        cv2.imwrite('rUd.png', rUd)
-        # cv2.imshow('left', imageL)
-        # cv2.imshow('right', imageR)
-        # cv2.imshow('left undistorted', lUd)
-        # cv2.imshow('right undistorted', rUd)
-        # cv2.waitKey(10000)
+        imageR = cv2.imread(right_image_paths[0])
+        lUd = cv2.undistort(imageL, lCameraMatrixUpdated, lDistCoeffsUpdated)
+        rUd = cv2.undistort(imageR, rCameraMatrixUpdated, rDistCoeffsUpdated)
+        # cv2.imwrite('lUd.png', lUd)
+        # cv2.imwrite('rUd.png', rUd)
+        cv2.imshow('left', imageL)
+        cv2.imshow('right', imageR)
+        cv2.imshow('left undistorted', lUd)
+        cv2.imshow('right undistorted', rUd)
+        cv2.waitKey()
         
         # Compute projection matrices
         #https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#stereorectify
-        (leftRectXform, rightRectXform, leftProjMat, rightProjMat, Q, leftRoi, rightRoi) = cv2.stereoRectify(lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, R, T)
+        (leftRectXform, rightRectXform, leftProjMat, rightProjMat, Q, leftRoi, rightRoi) = cv2.stereoRectify(lCameraMatrixUpdated, lDistCoeffsUpdated, rCameraMatrixUpdated, rDistCoeffsUpdated, self._IMAGE_SIZE, R, T)
         logger.debug("leftRectXform : " + repr(leftRectXform ))
         logger.debug("rightRectXform: " + repr(rightRectXform))
         logger.debug("leftProjMat   : " + repr(leftProjMat   ))
