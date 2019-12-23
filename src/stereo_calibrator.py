@@ -65,8 +65,19 @@ class StereoCalibrator:
             # logger.debug("all_points_in_3space = " + str(all_points_in_3space))
             # logger.debug("all_points_in_images = " + str(all_points_in_images))
             found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, np.array([[]]), np.array([]))
+            
+            # Debug by projecting the points in the calibration pattern onto the image
+            for img_path,points,rvec,tvec in zip(image_paths, all_points_in_3space, rvecs, tvecs):
+                img = cv2.imread(img_path)
+                imagePoints, jacobian = cv2.projectPoints(points, rvec, tvec, cameraMatrix, distCoeffs)
+                self._draw_points_on_image(img, imagePoints)
+                cv2.imshow('reprojected on %s'%img_path, img)
+                cv2.waitKey()
+            
             # logger.debug("found: " + repr(found) + ",\n cameraMatrix: " + repr(cameraMatrix) + ",\n distCoeffs: " + repr(distCoeffs) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
             # logger.debug("found: " + repr(found) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
+        else: 
+            logger.error("Can't find any calibration patterns in any of the supplied images.  Can't compute single camera calibration.")
         return cameraMatrix,distCoeffs
     
     def _draw_points_on_image(self, image, points): 
@@ -79,7 +90,8 @@ class StereoCalibrator:
         COLOR = (0,0,255)
         i = 0
         for point in points:
-            logger.debug("point: %s"%repr(point))
+            # point is x,y, like : np.array([[697.77185, 396.0037 ]], dtype=float32
+            # logger.debug("point: %s"%repr(point))
             cv2.circle(image, tuple(point[0]), RADIUS, COLOR, -1)
             cv2.putText(image, '%d'%i, tuple(point[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.33, COLOR)
             i += 1
@@ -102,11 +114,11 @@ class StereoCalibrator:
                 all_points_in_images += [points]
                 all_points_in_3space += [self._cal_3space_pattern]
                 
-                self._draw_points_on_image(img, points)
-                cv2.imshow(image_path, img)
+                # self._draw_points_on_image(img, points)
+                # cv2.imshow(image_path, img)
             else:
                 logger.warning("Didn't find calibration pattern in this image: %s"%image_path)
-        cv2.waitKey()
+        # cv2.waitKey()
         
         return all_points_in_3space, all_points_in_images
     
