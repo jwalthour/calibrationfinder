@@ -14,12 +14,13 @@ class StereoCalibrator:
         
         # Set up the calibration pattern 
         self.CAL_PATTERN_DIMS = (8, 8)  # in dots, row,col
-        self.CAL_DOT_SPACING_MM = (25.877, 25.877)  # in mm, row,col
+        self.CAL_DOT_SPACING_MM = (25.877, 25.877)  # in mm, x,y
         self._IMAGE_SIZE = (600,800)  # in px, row,col
-        self._cal_3space_pattern = []
+        self._SENSOR_DIMS = (4*0.707107,4*0.707107)  # in mm, row,col
+        self._cal_3space_pattern = [] #[(x,y), ...]
         for y in range(0, self.CAL_PATTERN_DIMS[0]):
             for x in range(0, self.CAL_PATTERN_DIMS[1]):
-                self._cal_3space_pattern += [(y * self.CAL_DOT_SPACING_MM[0], x * self.CAL_DOT_SPACING_MM[1], 0)]
+                self._cal_3space_pattern += [(x * self.CAL_DOT_SPACING_MM[0], y * self.CAL_DOT_SPACING_MM[1], 0)]
         # logger.debug("self._cal_3space_pattern: " + repr(self._cal_3space_pattern))
     
     def make_detector(self):
@@ -161,7 +162,7 @@ class StereoCalibrator:
         logger.debug("len(all_points_in_left_images): " + str(len(all_points_in_left_images)))
         logger.debug("len(all_points_in_right_images): " + str(len(all_points_in_right_images)))
         logger.info("Computing stereo calibration")
-        minError, lCameraMatrixUpdated, lDistCoeffsUpdated, rCameraMatrixUpdated, rDistCoeffsUpdated, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, flags=cv2.CALIB_FIX_INTRINSIC)
+        minError, lCameraMatrixUpdated, lDistCoeffsUpdated, rCameraMatrixUpdated, rDistCoeffsUpdated, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, flags=cv2.CALIB_USE_INTRINSIC_GUESS)
         logger.debug("minError: " + repr(minError))
         logger.debug("lCameraMatrix: " + repr(lCameraMatrix) + " -> lCameraMatrixUpdated: " + repr(lCameraMatrixUpdated))
         logger.debug("lDistCoeffs: " + repr(lDistCoeffs) + " -> lDistCoeffsUpdated: " + repr(lDistCoeffsUpdated))
@@ -234,8 +235,8 @@ class StereoCalibrator:
         all_points_in_right_images = all_points_in_right_images[0]
         all_points_in_right_images = all_points_in_right_images[:,0,:]
         # Switch from x,y to row,col
-        # all_points_in_left_images = all_points_in_left_images[:,:,[1,0]]
-        # all_points_in_right_images = all_points_in_right_images[:,:,[1,0]]
+        # all_points_in_left_images = all_points_in_left_images[:,[1,0]]
+        # all_points_in_right_images = all_points_in_right_images[:,[1,0]]
         all_points_in_left_images = all_points_in_left_images.transpose()
         logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_right_images = all_points_in_right_images.transpose()
