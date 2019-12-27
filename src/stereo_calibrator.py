@@ -216,7 +216,10 @@ class StereoCalibrator:
         }
         pair_image_path  : a twople, of the form ("/path/to/one/left/image", "/path/to/one/right/image"),
         
-        returns: a list of coordinates in real-world space
+        returns: a list of [x,y,z] coordinates in real-world space, in the form:
+            np.array([[   7549.84  , -184252.69  ,   40687.215 ],
+                   [   7626.0737, -185671.55  ,   41133.258 ],
+                   [   7643.9023, -186005.36  ,   41351.223 ]])
         """
         
         # Find individual dots in all the images
@@ -237,8 +240,8 @@ class StereoCalibrator:
         all_points_in_right_images = all_points_in_right_images[0]
         all_points_in_right_images = all_points_in_right_images[:,0,:]
         # Switch from x,y to row,col
-        # all_points_in_left_images = all_points_in_left_images[:,[1,0]]
-        # all_points_in_right_images = all_points_in_right_images[:,[1,0]]
+        all_points_in_left_images = all_points_in_left_images[:,[1,0]]
+        all_points_in_right_images = all_points_in_right_images[:,[1,0]]
         all_points_in_left_images = all_points_in_left_images.transpose()
         logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_right_images = all_points_in_right_images.transpose()
@@ -250,7 +253,7 @@ class StereoCalibrator:
         
         logger.debug('points4d: ' + repr(points4d))
         logger.debug('points3d: ' + repr(points3d))
-        return points3d
+        return points3d[:,0,:]
         
 
 def mark_dots(infilepath, outfilepath, detector):
@@ -356,5 +359,24 @@ if __name__ == '__main__':
     logger.info('Done, saved calibration to ' + output_fn)
 
     # test
-    sc.find_cal_pattern_in_3space(stereo_cal, pair_cal_images[0])
+    points3d = sc.find_cal_pattern_in_3space(stereo_cal, pair_cal_images[0])
+    
+    if True:
+        # This import registers the 3D projection, but is otherwise unused.
+        from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
+
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        
+        ax.scatter(points3d[:,0], points3d[:,1], points3d[:,2], marker='o')
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+
+        plt.show()
+
     cv2.waitKey()
