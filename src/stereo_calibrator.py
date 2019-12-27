@@ -176,17 +176,15 @@ class StereoCalibrator:
         logger.debug("F: " + repr(F))
         
         # For debugging only
-        imageL = cv2.imread(left_image_paths[0])
-        imageR = cv2.imread(right_image_paths[0])
-        lUd = cv2.undistort(imageL, lCameraMatrix, lDistCoeffs)
-        rUd = cv2.undistort(imageR, rCameraMatrix, rDistCoeffs)
-        # cv2.imwrite('lUd.png', lUd)
-        # cv2.imwrite('rUd.png', rUd)
-        cv2.imshow('left', imageL)
-        cv2.imshow('right', imageR)
-        cv2.imshow('left undistorted', lUd)
-        cv2.imshow('right undistorted', rUd)
-        cv2.waitKey()
+        # imageL = cv2.imread(left_image_paths[0])
+        # imageR = cv2.imread(right_image_paths[0])
+        # lUd = cv2.undistort(imageL, lCameraMatrix, lDistCoeffs)
+        # rUd = cv2.undistort(imageR, rCameraMatrix, rDistCoeffs)
+        # cv2.imshow('left', imageL)
+        # cv2.imshow('right', imageR)
+        # cv2.imshow('left undistorted', lUd)
+        # cv2.imshow('right undistorted', rUd)
+        # cv2.waitKey()
         
         # Compute projection matrices
         #https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#stereorectify
@@ -228,11 +226,10 @@ class StereoCalibrator:
         logger.info("Finding points in right images from pairs")
         all_points_in_3space, all_points_in_right_images = self._find_point_vectors([pair_image_path[1]])
         
-        for image_path,points in zip(pair_image_path, [all_points_in_left_images[0], all_points_in_right_images[0]]):
-            img = cv2.imread(image_path)
-            self._draw_points_on_image(img, points)
-            cv2.imshow(image_path, img)
-        # logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
+        # for image_path,points in zip(pair_image_path, [all_points_in_left_images[0], all_points_in_right_images[0]]):
+            # img = cv2.imread(image_path)
+            # self._draw_points_on_image(img, points)
+            # cv2.imshow(image_path, img)
         all_points_in_left_images = all_points_in_left_images[0]
         logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_left_images = all_points_in_left_images[:,0,:]
@@ -270,7 +267,8 @@ def mark_dots(infilepath, outfilepath, detector):
 
     
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.WARNING)
+    logger.setLevel(logging.DEBUG)
 
     sc = StereoCalibrator();
     cal_img_dir = 'test images/2019-10-18 stereo cal images/'
@@ -368,7 +366,6 @@ if __name__ == '__main__':
 
         import matplotlib.pyplot as plt
         import numpy as np
-        
         
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
