@@ -240,8 +240,8 @@ class StereoCalibrator:
         all_points_in_right_images = all_points_in_right_images[0]
         all_points_in_right_images = all_points_in_right_images[:,0,:]
         # Switch from x,y to row,col
-        # all_points_in_left_images = all_points_in_left_images[:,[1,0]]
-        # all_points_in_right_images = all_points_in_right_images[:,[1,0]]
+        all_points_in_left_images = all_points_in_left_images[:,[1,0]]
+        all_points_in_right_images = all_points_in_right_images[:,[1,0]]
         all_points_in_left_images = all_points_in_left_images.transpose()
         logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_right_images = all_points_in_right_images.transpose()
