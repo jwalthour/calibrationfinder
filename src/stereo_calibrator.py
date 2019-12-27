@@ -240,8 +240,8 @@ class StereoCalibrator:
         all_points_in_right_images = all_points_in_right_images[0]
         all_points_in_right_images = all_points_in_right_images[:,0,:]
         # Switch from x,y to row,col
-        all_points_in_left_images = all_points_in_left_images[:,[1,0]]
-        all_points_in_right_images = all_points_in_right_images[:,[1,0]]
+        # all_points_in_left_images = all_points_in_left_images[:,[1,0]]
+        # all_points_in_right_images = all_points_in_right_images[:,[1,0]]
         all_points_in_left_images = all_points_in_left_images.transpose()
         logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_right_images = all_points_in_right_images.transpose()
@@ -362,6 +362,7 @@ if __name__ == '__main__':
     points3d = sc.find_cal_pattern_in_3space(stereo_cal, pair_cal_images[0])
     
     if True:
+        # https://matplotlib.org/3.1.1/gallery/mplot3d/scatter3d.html
         # This import registers the 3D projection, but is otherwise unused.
         from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 
