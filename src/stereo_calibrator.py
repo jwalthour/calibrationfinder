@@ -99,11 +99,12 @@ class StereoCalibrator:
             cv2.putText(image, '%d'%i, tuple(point[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.33, COLOR)
             i += 1
     
-    def _find_point_vectors(self, image_paths):
+    def _find_point_vectors(self, image_paths, rowCol=False):
         """
         Get the coorinates of the dots on the calibration target
         
         image_paths : list of N image file paths
+        rowCol : true to return points in row,col convention.  False to use x,y convention.
         returns : (<list of N copies of self._cal_3space_pattern>, <list of arrays of dot coordinates in images>)
         """
         all_points_in_images = []
@@ -117,7 +118,8 @@ class StereoCalibrator:
             # logger.debug("points.shape: %s"%repr(points.shape))
             points = points[:,0,:] # This doesn't seem to actually change anything, it seems to be just a spare dimension?
             # findCirclesGrid returns x,y convention.  Convert to row,col
-            points = points[:,[1,0]]
+            if rowCol:
+                points = points[:,[1,0]]
             # logger.debug("points.shape: %s"%repr(points.shape))
             # logger.debug(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
             if found:
@@ -159,9 +161,9 @@ class StereoCalibrator:
         
         # Find individual dots in all the images
         logger.info("Finding points in left images from pairs")
-        all_points_in_3space, all_points_in_left_images = self._find_point_vectors(left_image_paths)
+        all_points_in_3space, all_points_in_left_images = self._find_point_vectors(left_image_paths, True)
         logger.info("Finding points in right images from pairs")
-        all_points_in_3space, all_points_in_right_images = self._find_point_vectors(right_image_paths)
+        all_points_in_3space, all_points_in_right_images = self._find_point_vectors(right_image_paths, True)
         all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
         # logger.debug("all_points_in_3space: " + repr(all_points_in_3space))
         logger.debug("all_points_in_left_images: " + repr(all_points_in_left_images))
