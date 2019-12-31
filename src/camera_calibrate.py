@@ -104,6 +104,14 @@ class StereoCalibration(object):
         print('T', T)
         print('E', E)
         print('F', F)
+        (leftRectXform, rightRectXform, leftProjMat, rightProjMat, Q, leftRoi, rightRoi) = cv2.stereoRectify(M1, d1, M2, d2, dims, R, T)
+        print("leftRectXform : ", leftRectXform )
+        print("rightRectXform: ", rightRectXform)
+        print("leftProjMat   : ", leftProjMat   )
+        print("rightProjMat  : ", rightProjMat  )
+        print("Q: ", Q)
+        print("leftRoi: ", leftRoi)
+        print("rightRoi: ", rightRoi)
 
         # for i in range(len(self.r1)):
         #     print("--- pose[", i+1, "] ---")
