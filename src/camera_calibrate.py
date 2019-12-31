@@ -25,8 +25,8 @@ class StereoCalibration(object):
         self.read_images(self.cal_path)
 
     def read_images(self, cal_path):
-        images_right = glob.glob(cal_path + 'RIGHT/*.JPG')
-        images_left = glob.glob(cal_path + 'LEFT/*.JPG')
+        images_right = glob.glob(cal_path + 'right*.JPG')
+        images_left = glob.glob(cal_path + 'left*.JPG')
         images_left.sort()
         images_right.sort()
 
