@@ -231,24 +231,24 @@ class StereoCalibrator:
             # self._draw_points_on_image(img, points)
             # cv2.imshow(image_path, img)
         all_points_in_left_images = all_points_in_left_images[0]
-        logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
+        # logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_left_images = all_points_in_left_images[:,0,:]
-        logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
+        # logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_right_images = all_points_in_right_images[0]
         all_points_in_right_images = all_points_in_right_images[:,0,:]
         # Switch from x,y to row,col
         all_points_in_left_images = all_points_in_left_images[:,[1,0]]
         all_points_in_right_images = all_points_in_right_images[:,[1,0]]
         all_points_in_left_images = all_points_in_left_images.transpose()
-        logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
+        # logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_right_images = all_points_in_right_images.transpose()
         
-        logger.debug('all_points_in_left_images: ' + repr(all_points_in_left_images))
+        # logger.debug('all_points_in_left_images: ' + repr(all_points_in_left_images))
         
         points4d = cv2.triangulatePoints(stereo_cal['leftProjMat'], stereo_cal['rightProjMat'], all_points_in_left_images, all_points_in_right_images)
         points3d = cv2.convertPointsFromHomogeneous(points4d.transpose())
         
-        logger.debug('points4d: ' + repr(points4d))
+        # logger.debug('points4d: ' + repr(points4d))
         logger.debug('points3d: ' + repr(points3d))
         return points3d[:,0,:]
         
@@ -349,7 +349,13 @@ if __name__ == '__main__':
     # for img in all_images:
         # outfile = 'dotted_' + img;
         # mark_dots(cal_img_dir + img, cal_img_dir + outfile, det)
-    stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pair_cal_images)
+        
+    for numPairs in range(1, len(pair_cal_images) + 1):
+        logger.debug("=============================================================================")
+        logger.debug("Trying with %d pairs."%numPairs)
+        pairsToUse = pair_cal_images[0:numPairs]
+        stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pairsToUse )
+        input('Press enter to continue...')
     
     output_fn = 'src/stereo_cal.py'
     with open(output_fn, 'w+') as outfile:
