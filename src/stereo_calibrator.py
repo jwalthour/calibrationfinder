@@ -101,8 +101,10 @@ class StereoCalibrator:
     
     def _find_point_vectors(self, image_paths):
         """
+        Get the coorinates of the dots on the calibration target
+        
         image_paths : list of N image file paths
-        returns : (<list of N copies of self._cal_3space_pattern>, <list of lists of dot coordinates in images>)
+        returns : (<list of N copies of self._cal_3space_pattern>, <list of arrays of dot coordinates in images>)
         """
         all_points_in_images = []
         all_points_in_3space = []
@@ -112,6 +114,11 @@ class StereoCalibrator:
             img = cv2.imread(image_path)
             points = np.array([[]])
             found,points = cv2.findCirclesGrid(img, self.CAL_PATTERN_DIMS, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._cal_target_dot_det)
+            # logger.debug("points.shape: %s"%repr(points.shape))
+            points = points[:,0,:] # This doesn't seem to actually change anything, it seems to be just a spare dimension?
+            # findCirclesGrid returns x,y convention.  Convert to row,col
+            points = points[:,[1,0]]
+            # logger.debug("points.shape: %s"%repr(points.shape))
             # logger.debug(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
             if found:
                 all_points_in_images += [points]
@@ -157,8 +164,8 @@ class StereoCalibrator:
         all_points_in_3space, all_points_in_right_images = self._find_point_vectors(right_image_paths)
         all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
         # logger.debug("all_points_in_3space: " + repr(all_points_in_3space))
-        # logger.debug("all_points_in_left_images: " + repr(all_points_in_left_images))
-        # logger.debug("all_points_in_right_images: " + repr(all_points_in_right_images))
+        logger.debug("all_points_in_left_images: " + repr(all_points_in_left_images))
+        logger.debug("all_points_in_right_images: " + repr(all_points_in_right_images))
         # logger.debug("self._IMAGE_SIZE: " + repr(self._IMAGE_SIZE))
         logger.debug("len(all_points_in_3space): " + str(len(all_points_in_3space)))
         logger.debug("len(all_points_in_left_images): " + str(len(all_points_in_left_images)))
@@ -232,13 +239,13 @@ class StereoCalibrator:
             # cv2.imshow(image_path, img)
         all_points_in_left_images = all_points_in_left_images[0]
         # logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
-        all_points_in_left_images = all_points_in_left_images[:,0,:]
+        # all_points_in_left_images = all_points_in_left_images[:,0,:]
         # logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_right_images = all_points_in_right_images[0]
-        all_points_in_right_images = all_points_in_right_images[:,0,:]
+        # all_points_in_right_images = all_points_in_right_images[:,0,:]
         # Switch from x,y to row,col
-        all_points_in_left_images = all_points_in_left_images[:,[1,0]]
-        all_points_in_right_images = all_points_in_right_images[:,[1,0]]
+        # all_points_in_left_images = all_points_in_left_images[:,[1,0]]
+        # all_points_in_right_images = all_points_in_right_images[:,[1,0]]
         all_points_in_left_images = all_points_in_left_images.transpose()
         # logger.debug("Shape: %s"%repr(all_points_in_left_images.shape))
         all_points_in_right_images = all_points_in_right_images.transpose()
@@ -350,12 +357,20 @@ if __name__ == '__main__':
         # outfile = 'dotted_' + img;
         # mark_dots(cal_img_dir + img, cal_img_dir + outfile, det)
         
-    for numPairs in range(1, len(pair_cal_images) + 1):
-        logger.debug("=============================================================================")
-        logger.debug("Trying with %d pairs."%numPairs)
-        pairsToUse = pair_cal_images[0:numPairs]
-        stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pairsToUse )
-        input('Press enter to continue...')
+    if False:
+        # Progressively include more pairs
+        for numPairs in range(1, len(pair_cal_images) + 1):
+            logger.debug("=============================================================================")
+            logger.debug("Trying with %d pairs."%numPairs)
+            pairsToUse = pair_cal_images[0:numPairs]
+            stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pairsToUse )
+            input('Press enter to continue...')
+    elif True:
+        # Do just the first two.  Those are in the same relative position, so if it doesn't work on these, it never will
+        stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pair_cal_images[0:2])
+    else:
+        # Do em all at once
+        stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pair_cal_images)
     
     output_fn = 'src/stereo_cal.py'
     with open(output_fn, 'w+') as outfile:
