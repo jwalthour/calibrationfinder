@@ -15,6 +15,7 @@ class StereoCalibration(object):
         # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
         self.objp = np.zeros((9*6, 3), np.float32)
         self.objp[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
+        print("Object points: " + repr(self.objp))
 
         # Arrays to store object points and image points from all the images.
         self.objpoints = []  # 3d point in real world space
@@ -47,6 +48,7 @@ class StereoCalibration(object):
             if ret_l is True:
                 rt = cv2.cornerSubPix(gray_l, corners_l, (11, 11),
                                       (-1, -1), self.criteria)
+                print("Left image points in frame %d: %s" %(i,repr(corners_l)))
                 self.imgpoints_l.append(corners_l)
 
                 # Draw and display the corners
@@ -67,10 +69,22 @@ class StereoCalibration(object):
                 cv2.waitKey(500)
             img_shape = gray_l.shape[::-1]
 
+        print("")
+        print("----------------")
+        print("")
+        
+        print("Before calibrateCamera: ")
+        print("img_shape: " + repr(img_shape))
+        print("self.objpoints: " + repr(self.objpoints))
+        print("self.imgpoints_l: " + repr(self.imgpoints_l))
         rt, self.M1, self.d1, self.r1, self.t1 = cv2.calibrateCamera(
             self.objpoints, self.imgpoints_l, img_shape, None, None)
         rt, self.M2, self.d2, self.r2, self.t2 = cv2.calibrateCamera(
             self.objpoints, self.imgpoints_r, img_shape, None, None)
+        print("After calibrateCamera: ")
+        print("img_shape: " + repr(img_shape))
+        print("self.objpoints: " + repr(self.objpoints))
+        print("self.imgpoints_l: " + repr(self.imgpoints_l))
 
         self.camera_model = self.stereo_calibrate(img_shape)
 
