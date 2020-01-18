@@ -15,7 +15,6 @@ class StereoCalibrator:
         # Set up the calibration pattern 
         self.CAL_PATTERN_DIMS = (8, 8)  # in dots, row,col
         self.CAL_DOT_SPACING_MM = (25.877, 25.877)  # in mm, x,y
-        # self._IMAGE_SIZE = (600,800)  # in px, row,col
         self._IMAGE_SIZE = (800,600)  # in px, x,y
         self._SENSOR_DIMS = (4*0.707107,4*0.707107)  # in mm, row,col
         self._cal_3space_pattern = [] #[(x,y), ...]
@@ -173,7 +172,22 @@ class StereoCalibrator:
         logger.debug("len(all_points_in_left_images): " + str(len(all_points_in_left_images)))
         logger.debug("len(all_points_in_right_images): " + str(len(all_points_in_right_images)))
         logger.info("Computing stereo calibration")
-        minError, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, flags=cv2.CALIB_FIX_INTRINSIC)
+        flags = 0
+        flags |= cv2.CALIB_FIX_INTRINSIC
+        # flags |= cv2.CALIB_FIX_PRINCIPAL_POINT
+        flags |= cv2.CALIB_USE_INTRINSIC_GUESS
+        flags |= cv2.CALIB_FIX_FOCAL_LENGTH
+        # flags |= cv2.CALIB_FIX_ASPECT_RATIO
+        flags |= cv2.CALIB_ZERO_TANGENT_DIST
+        # flags |= cv2.CALIB_RATIONAL_MODEL
+        # flags |= cv2.CALIB_SAME_FOCAL_LENGTH
+        # flags |= cv2.CALIB_FIX_K3
+        # flags |= cv2.CALIB_FIX_K4
+        # flags |= cv2.CALIB_FIX_K5
+
+        stereocalib_criteria = (cv2.TERM_CRITERIA_MAX_ITER +
+                                cv2.TERM_CRITERIA_EPS, 100, 1e-5)
+        minError, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, criteria=stereocalib_criteria, flags=flags)
         logger.debug("minError: " + repr(minError))
         logger.debug("lCameraMatrix: " + repr(lCameraMatrix))
         logger.debug("lDistCoeffs: " + repr(lDistCoeffs))
