@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-import logging
+import coloredlogs, logging
+coloredlogs.install() # pip install coloredlogs
 logger = logging.getLogger(__name__)
 logger.info('Importing')
 import cv2
