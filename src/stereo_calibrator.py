@@ -381,9 +381,12 @@ if __name__ == '__main__':
             pairsToUse = pair_cal_images[0:numPairs]
             stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pairsToUse )
             input('Press enter to continue...')
-    elif True:
+    elif False:
         # Do just the first two.  Those are in the same relative position, so if it doesn't work on these, it never will
         stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pair_cal_images[0:2])
+    elif True:
+        # Just use two images
+        stereo_cal = sc.find_stereo_pair_calibration([pair_cal_images[0][0], pair_cal_images[1][0]] , [pair_cal_images[0][1], pair_cal_images[1][1]], pair_cal_images[0:2])
     else:
         # Do em all at once
         stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pair_cal_images)
