@@ -386,7 +386,8 @@ if __name__ == '__main__':
         stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pair_cal_images[0:2])
     elif True:
         # Just use two images
-        stereo_cal = sc.find_stereo_pair_calibration([pair_cal_images[0][0], pair_cal_images[1][0]] , [pair_cal_images[0][1], pair_cal_images[1][1]], pair_cal_images[0:2])
+        stereo_cal = sc.find_stereo_pair_calibration([cal_img_dir + 'left/left-00012.png'] , [cal_img_dir + 'right/right-00012.png'],
+            [(cal_img_dir + 'left/left-00012.png', cal_img_dir + 'right/right-00012.png')])
     else:
         # Do em all at once
         stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pair_cal_images)
