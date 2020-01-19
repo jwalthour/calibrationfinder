@@ -114,14 +114,14 @@ class StereoCalibrator:
             img = cv2.imread(image_path)
             points = np.array([[]])
             found,points = cv2.findCirclesGrid(img, self.CAL_PATTERN_DIMS, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._cal_target_dot_det)
-            # logger.debug("points.shape: %s"%repr(points.shape))
-            points = points[:,0,:] # This doesn't seem to actually change anything, it seems to be just a spare dimension?
-            # findCirclesGrid returns x,y convention.  Convert to row,col
-            if rowCol:
-                points = points[:,[1,0]]
-            # logger.debug("points.shape: %s"%repr(points.shape))
-            # logger.debug(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
             if found:
+                # logger.debug("points.shape: %s"%repr(points.shape))
+                points = points[:,0,:] # This doesn't seem to actually change anything, it seems to be just a spare dimension?
+                # findCirclesGrid returns x,y convention.  Convert to row,col
+                if rowCol:
+                    points = points[:,[1,0]]
+                # logger.debug("points.shape: %s"%repr(points.shape))
+                # logger.debug(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
                 all_points_in_images += [points]
                 all_points_in_3space += [self._cal_3space_pattern]
                 
