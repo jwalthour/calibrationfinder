@@ -213,6 +213,15 @@ class StereoCalibrator:
         # Compute projection matrices
         #https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#stereorectify
         (leftRectXform, rightRectXform, leftProjMat, rightProjMat, Q, leftRoi, rightRoi) = cv2.stereoRectify(lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, R, T)
+        Txf = rightProjMat[0,3]
+        Tyf = rightProjMat[1,3]
+        if(Txf != 0 and Tyf == 0):
+            logger.info("Horizontal stereo configuration detected.")
+        elif(Txf == 0 and Tyf != 0):
+            logger.info("Vertical stereo configuration detected.")
+        else:
+            logger.error("Invalid stereo configuration detected. Txf=%f, Tyf=%f"%(Txf,Tyf))
+        
         logger.debug("leftRectXform : " + repr(leftRectXform ))
         logger.debug("rightRectXform: " + repr(rightRectXform))
         logger.debug("leftProjMat   : " + repr(leftProjMat   ))
