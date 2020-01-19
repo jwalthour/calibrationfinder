@@ -66,7 +66,7 @@ class StereoCalibrator:
             all_points_in_3space = np.array(all_points_in_3space, dtype=np.float32)
             # logger.debug("all_points_in_3space = " + str(all_points_in_3space))
             # logger.debug("all_points_in_images = " + str(all_points_in_images))
-            found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, np.array([[]]), np.array([]))
+            found,cameraMatrix,distCoeffs,rvecs,tvecs = cv2.calibrateCamera(all_points_in_3space, all_points_in_images, self._IMAGE_SIZE, None, None)
             
             # Debug by projecting the points in the calibration pattern onto the image
             # for img_path,points,rvec,tvec in zip(image_paths, all_points_in_3space, rvecs, tvecs):
