@@ -3,12 +3,13 @@ User-interactive stereo calibration capture and computation application
 """
 import logging
 logger = logging.getLogger(__name__)
-logger.info('Importing')
+logger.debug('Importing')
 from datetime import datetime
 import os
 import cv2
 import numpy as np
-logger.info('Done')
+from stereo_calibrator import StereoCalibrator
+logger.debug('Done')
 
 
 def readVideoStream(url):
@@ -27,24 +28,27 @@ def readVideoStream(url):
 def readStereoData(leftUrl, rightUrl, savePath):
     """
     User-interactive function, presents a window for esc/s/c
-    Returns a structure like: {'leftImagePaths':['file1',...], 'rightImagePaths':['file1',...]}
+    Returns a list of pairs of paths like: [('savePath/left0.png','savePath/right0.png'), ...]
         that lists off all the files saved, or None if the user asked to exit
     leftUrl, rightUrl : string, URL to each camera stream, including authentication, compatible with cv2.VideoCapture(url)
     savePath : directory in which to save data files
     """
-    os.makedirs(savePath)
     leftCap = cv2.VideoCapture(leftUrl)
     rightCap = cv2.VideoCapture(rightUrl)
     
-    paths = {'leftImagePaths':[], 'rightImagePaths':[]}
+    paths = []
     imgNum = 0
     while True:
         leftRet, leftFrame = leftCap.read()
+        # leftTimestamp = leftCap.get(cv2.CAP_PROP_POS_MSEC)
         rightRet, rightFrame = rightCap.read()
+        # rightTimestamp = leftCap.get(cv2.CAP_PROP_POS_MSEC)
         if not leftRet and rightRet:
             print("No frame.")
             return paths
-            
+        
+        # logger.info("Frame timestamps: %f, %f"%(leftTimestamp,rightTimestamp))
+        
         frame = np.hstack((leftFrame, rightFrame))
         cv2.imshow('Press escape to exit, s to save, c to calibrate based on saved', frame)
         
@@ -54,8 +58,19 @@ def readStereoData(leftUrl, rightUrl, savePath):
         elif key == ord('c'):
             return paths
         elif key == ord('s'):
-            pass # TODO
-        else:
+            leftFn = os.path.join(savePath, 'left_%d.png'%imgNum)
+            rightFn = os.path.join(savePath, 'right_%d.png'%imgNum)
+            try:
+                os.makedirs(savePath, exist_ok=True)
+                cv2.imwrite(leftFn, leftFrame)
+                cv2.imwrite(rightFn, rightFrame)
+                paths += [(leftFn, rightFn)]
+                logger.info("Saved pairs at %s,%s"%(leftFn, rightFn))
+            except Exception as e:
+                logger.error("Failed to save frames.", exc_info=True)
+            imgNum += 1
+            
+        # else:
             # logger.debug('Got key: %d'%key)
         
             
@@ -82,5 +97,14 @@ if __name__ == '__main__':
     
     leftUrl = leftUrlPattern%(USERNAME,PASSWORD)
     rightUrl = rightUrlPattern%(USERNAME,PASSWORD)
-    readStereoData(leftUrl, rightUrl, dataDir)
-    
+    paths = readStereoData(leftUrl, rightUrl, dataDir)
+    if paths is not None:
+        print("Got paths: " + repr(paths))
+        sc = StereoCalibrator()
+        
+        stereo_cal = sc.find_stereo_pair_calibration(paths)
+        if stereo_cal is not None:
+            print("Have cal: " + repr(stereo_cal))
+        else:
+            print("Failed to find cal.")
+    print("Exiting.")
