@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 import logging
 logger = logging.getLogger(__name__)
-logger.info('Importing')
+logger.debug('Importing')
 import cv2
 import cv2.aruco
 import numpy as np
+logger.debug('Done')
 
 class StereoCalibrator:
     def __init__(self):
@@ -59,6 +60,7 @@ class StereoCalibrator:
     def find_single_cam_calibration(self, image_paths):
         """
         image_paths : list of image file paths
+        return : cameraMatrix,distCoeffs if successful, or None,None if not
         """
         all_points_in_3space, all_points_in_images = self._find_point_vectors(image_paths)
         if len(all_points_in_3space) > 0:
@@ -78,9 +80,10 @@ class StereoCalibrator:
             
             # logger.debug("found: " + repr(found) + ",\n cameraMatrix: " + repr(cameraMatrix) + ",\n distCoeffs: " + repr(distCoeffs) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
             # logger.debug("found: " + repr(found) + ",\n rvecs: " + repr(rvecs) + ",\n tvecs: " + repr(tvecs))
+            return cameraMatrix,distCoeffs
         else: 
             logger.error("Can't find any calibration patterns in any of the supplied images.  Can't compute single camera calibration.")
-        return cameraMatrix,distCoeffs
+            return None,None
     
     def _draw_points_on_image(self, image, points): 
         """
@@ -133,19 +136,22 @@ class StereoCalibrator:
         
         return all_points_in_3space, all_points_in_images
     
-    def find_stereo_pair_calibration(self, left_image_paths, right_image_paths, pair_image_paths):
+    def find_stereo_pair_calibration(self, pair_image_paths):
         """
         
         left_image_paths  : list of strings, each of which is a path to an image from the left camera
         right_image_paths : list of strings, each of which is a path to an image from the right camera
         pair_image_paths  : list of twoples, of the form ("/path/to/one/left/image", "/path/to/one/right/image"),
         
-        returns : Projection matrices for cv2.triangulatePoints, stored in a dictionary like this:
+        returns : If failure, None.  If successs, projection matrices for cv2.triangulatePoints, stored in a dictionary like this:
         {
             'leftProjMat':leftProjMat ,
             'rightProjMat':rightProjMat,
         }
         """
+        left_image_paths = [pair[0] for pair in pair_image_paths]
+        right_image_paths = [pair[1] for pair in pair_image_paths]
+
         # First must calibrate individual cameras
         logger.info("Computing left camera calibration")
         lCameraMatrix, lDistCoeffs = self.find_single_cam_calibration(left_image_paths)
@@ -154,9 +160,9 @@ class StereoCalibrator:
         rCameraMatrix, rDistCoeffs = self.find_single_cam_calibration(right_image_paths)
         logger.info("rCameraMatrix: " + repr(rCameraMatrix))
         
-        # redefine these 
-        left_image_paths = [pair[0] for pair in pair_image_paths]
-        right_image_paths = [pair[1] for pair in pair_image_paths]
+        if lCameraMatrix is None or rCameraMatrix is None:
+            logger.error("Failed to find one or both camera matrices.")
+            return None
         
         # Find individual dots in all the images
         logger.info("Finding points in left images from pairs")
@@ -187,7 +193,11 @@ class StereoCalibrator:
 
         stereocalib_criteria = (cv2.TERM_CRITERIA_MAX_ITER +
                                 cv2.TERM_CRITERIA_EPS, 100, 1e-5)
-        minError, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, criteria=stereocalib_criteria, flags=flags)
+        try:
+            minError, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, R, T, E, F = cv2.stereoCalibrate(all_points_in_3space, all_points_in_left_images, all_points_in_right_images, lCameraMatrix, lDistCoeffs, rCameraMatrix, rDistCoeffs, self._IMAGE_SIZE, criteria=stereocalib_criteria, flags=flags)
+        except:
+            logger.error("Failed to find stereo calibration.", exc_info=True)
+            return None
         logger.debug("minError: " + repr(minError))
         logger.debug("lCameraMatrix: " + repr(lCameraMatrix))
         logger.debug("lDistCoeffs: " + repr(lDistCoeffs))
@@ -302,54 +312,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.WARNING)
     logger.setLevel(logging.DEBUG)
 
-    sc = StereoCalibrator();
+    sc = StereoCalibrator()
     cal_img_dir = 'test images/2019-10-18 stereo cal images/'
-    left_image_names  = [
-        'left/left-00001.png',
-        'left/left-00002.png',
-        'left/left-00003.png',
-        'left/left-00004.png',
-        'left/left-00005.png',
-        'left/left-00006.png',
-        # 'left/left-00007.png',
-        # 'left/left-00008.png',
-        # 'left/left-00009.png',
-        'left/left-00010.png',
-        'left/left-00011.png',
-        'left/left-00012.png',
-        'left/left-00013.png',
-        'left/left-00014.png',
-        'left/left-00015.png',
-        'left/left-00019.png',
-        # 'left/left-00020.png',
-        'left/left-00021.png',
-        'left/left-00022.png',
-        'left/left-00023.png',
-        'left/left-00025.png',
-    ]
-    right_image_names = [
-        'right/right-00001.png',
-        'right/right-00002.png',
-        # 'right/right-00003.png',
-        'right/right-00004.png',
-        'right/right-00005.png',
-        'right/right-00006.png',
-        'right/right-00007.png',
-        'right/right-00008.png',
-        'right/right-00009.png',
-        'right/right-00010.png',
-        'right/right-00011.png',
-        'right/right-00012.png',
-        'right/right-00013.png',
-        # 'right/right-00014.png',
-        # 'right/right-00015.png',
-        'right/right-00019.png',
-        'right/right-00020.png',
-        'right/right-00021.png',
-        'right/right-00022.png',
-        'right/right-00023.png',
-        # 'right/right-00025.png',
-    ]
     pair_image_names = [
         ('left/left-00001.png','right/right-00001.png'),
         ('left/left-00002.png','right/right-00002.png'),
@@ -373,8 +337,6 @@ if __name__ == '__main__':
         ('left/left-00023.png','right/right-00023.png'),
         # ('left/left-00025.png','right/right-00025.png'),
     ]
-    left_cal_images = [cal_img_dir + img for img in left_image_names]
-    right_cal_images = [cal_img_dir + img for img in right_image_names]
     pair_cal_images = [(cal_img_dir + pair[0], cal_img_dir + pair[1]) for pair in pair_image_names]
     all_images = left_image_names + right_image_names
     # det = sc.make_detector()
@@ -388,18 +350,18 @@ if __name__ == '__main__':
             logger.debug("=============================================================================")
             logger.debug("Trying with %d pairs."%numPairs)
             pairsToUse = pair_cal_images[0:numPairs]
-            stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pairsToUse )
+            stereo_cal = sc.find_stereo_pair_calibration(pairsToUse )
             input('Press enter to continue...')
     elif False:
         # Do just the first two.  Those are in the same relative position, so if it doesn't work on these, it never will
-        stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pair_cal_images[0:2])
+        stereo_cal = sc.find_stereo_pair_calibration(pair_cal_images[0:2])
     elif True:
         # Just use two images
-        stereo_cal = sc.find_stereo_pair_calibration([cal_img_dir + 'left/left-00012.png'] , [cal_img_dir + 'right/right-00012.png'],
+        stereo_cal = sc.find_stereo_pair_calibration(
             [(cal_img_dir + 'left/left-00012.png', cal_img_dir + 'right/right-00012.png')])
     else:
         # Do em all at once
-        stereo_cal = sc.find_stereo_pair_calibration(left_cal_images, right_cal_images, pair_cal_images)
+        stereo_cal = sc.find_stereo_pair_calibration( pair_cal_images)
     
     output_fn = 'src/stereo_cal.py'
     with open(output_fn, 'w+') as outfile:
