@@ -77,6 +77,8 @@ def readStereoData(leftUrl, rightUrl, savePath):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.WARNING)
     logger.setLevel(logging.DEBUG)
+    # This is super verbose
+    logging.getLogger('stereo_calibrator').setLevel(logging.DEBUG)
 
     from auth import USERNAME,PASSWORD # Make a file that defines these two strings
     # Application settings

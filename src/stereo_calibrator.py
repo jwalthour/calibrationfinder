@@ -231,6 +231,8 @@ class StereoCalibrator:
         else:
             logger.error("Invalid stereo configuration detected. Txf=%f, Tyf=%f"%(Txf,Tyf))
         
+        # TODO: ROI rectangles are x,y,width,height.  Check if we got a reasonable fraction of each image
+        
         logger.debug("leftRectXform : " + repr(leftRectXform ))
         logger.debug("rightRectXform: " + repr(rightRectXform))
         logger.debug("leftProjMat   : " + repr(leftProjMat   ))
