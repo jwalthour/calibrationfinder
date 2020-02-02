@@ -8,21 +8,26 @@ import numpy as np
 logger.debug('Done')
 
 class StereoCalibrator:
-    def __init__(self):
+    def __init__(self, calPatternDims=(8, 8), calDotSpacingMm=(25.877, 25.877), detector=None):
         """
+        calPatternDims : (int, int) - the rows,cols indicating the number of dots on the target
+        calDotSpacingMm : (float,float) - in x,y, the number of millimeters between dots in x and y
+        detector : a cv2.SimpleBlobDetector, or None for the default
         """
         self._cal_target_dot_det = self.make_detector()
         
         # Set up the calibration pattern 
-        self.CAL_PATTERN_DIMS = (8, 8)  # in dots, row,col
-        self.CAL_DOT_SPACING_MM = (25.877, 25.877)  # in mm, x,y
+        # self._calPatternDims = (8, 8)  # in dots, row,col
+        self._calPatternDims = (24, 48)  # in dots, row,col
+        # self._calDotSpacingMm = (25.877, 25.877)  # in mm, x,y
+        self._calDotSpacingMm = (25.4, 25.4)  # in mm, x,y
         self._IMAGE_SIZE = (800,600)  # in px, x,y
         self._SENSOR_DIMS = (4*0.707107,4*0.707107)  # in mm, row,col
         self._cal_3space_pattern = [] #[(x,y), ...]
         # OpenCV coordinate convention: x+ rightward, y+ downward, z+ out away from camera.
-        for y in range(0, self.CAL_PATTERN_DIMS[0]):
-            for x in range(0, self.CAL_PATTERN_DIMS[1]):
-                self._cal_3space_pattern += [(x * self.CAL_DOT_SPACING_MM[0], y * self.CAL_DOT_SPACING_MM[1], 0)]
+        for y in range(0, self._calPatternDims[0]):
+            for x in range(0, self._calPatternDims[1]):
+                self._cal_3space_pattern += [(x * self._calDotSpacingMm[0], y * self._calDotSpacingMm[1], 0)]
         # logger.debug("self._cal_3space_pattern: " + repr(self._cal_3space_pattern))
     
     def make_detector(self):
@@ -116,7 +121,7 @@ class StereoCalibrator:
         for image_path in image_paths:
             img = cv2.imread(image_path)
             points = np.array([[]])
-            found,points = cv2.findCirclesGrid(img, self.CAL_PATTERN_DIMS, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._cal_target_dot_det)
+            found,points = cv2.findCirclesGrid(img, self._calPatternDims, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._cal_target_dot_det)
             if found:
                 # logger.debug("points.shape: %s"%repr(points.shape))
                 points = points[:,0,:] # This doesn't seem to actually change anything, it seems to be just a spare dimension?
@@ -340,7 +345,6 @@ if __name__ == '__main__':
         # ('left/left-00025.png','right/right-00025.png'),
     ]
     pair_cal_images = [(cal_img_dir + pair[0], cal_img_dir + pair[1]) for pair in pair_image_names]
-    all_images = left_image_names + right_image_names
     # det = sc.make_detector()
     # for img in all_images:
         # outfile = 'dotted_' + img;
