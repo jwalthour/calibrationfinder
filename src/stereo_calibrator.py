@@ -17,10 +17,10 @@ class StereoCalibrator:
         self._cal_target_dot_det = self.make_detector()
         
         # Set up the calibration pattern 
-        # self._calPatternDims = (8, 8)  # in dots, row,col
-        self._calPatternDims = (24, 48)  # in dots, row,col
-        # self._calDotSpacingMm = (25.877, 25.877)  # in mm, x,y
-        self._calDotSpacingMm = (25.4, 25.4)  # in mm, x,y
+        self._calPatternDims = calPatternDims
+        # self._calPatternDims = (24, 48)  # in dots, row,col
+        self._calDotSpacingMm = calDotSpacingMm
+        # self._calDotSpacingMm = (25.4, 25.4)  # in mm, x,y
         self._IMAGE_SIZE = (800,600)  # in px, x,y
         self._SENSOR_DIMS = (4*0.707107,4*0.707107)  # in mm, row,col
         self._cal_3space_pattern = [] #[(x,y), ...]
