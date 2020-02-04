@@ -8,6 +8,7 @@ from datetime import datetime
 import sys
 import os
 import cv2
+import argparse
 import numpy as np
 from stereo_calibrator import StereoCalibrator
 from cal_target_defs import calibrationTargets
@@ -63,13 +64,28 @@ def readStereoData(leftUrl, rightUrl, savePath):
         
             
 if __name__ == '__main__':
-    # TODO: add argparse for target idx, username, password, and URL patterns
     logging.basicConfig(level=logging.WARNING)
     logger.setLevel(logging.DEBUG)
     # This is super verbose
     logging.getLogger('stereo_calibrator').setLevel(logging.DEBUG)
+    
+    parser = argparse.ArgumentParser(description='Capture and/or process stereo calibration data.')
+    parser.add_argument("-c", "--capture", help="Perform user-interactive image capture prior to processing", action="store_true", default=False)
+    parser.add_argument("-p", "--process", help="Process images to compute stereo calibration", action="store_true", default=False)
+    parser.add_argument("-l", "--leftUrl", metavar='URL', help="Left camera URL pattern, first %%s is replaced with username, second with password", default='http://%s:%s@192.168.0.253/mjpg/video.mjpg')
+    parser.add_argument("-r", "--rightUrl", metavar='URL', help="Right camera URL pattern, first %%s is replaced with username, second with password", default='http://%s:%s@192.168.0.252/mjpg/video.mjpg')
+    parser.add_argument("-f", "--folderNameFormat", metavar='Folder', help="Folder name full of images.  Will run strftime on this string, so you can use strftime escape characters.", default='stereo_cal_data_%Y-%d-%m_%H-%M-%S')
+    parser.add_argument("-lf", "--leftFilenameFormat", metavar='Filename', help="Pattern for left-camera filenames within the specified folder.  Must have one %%d in it, which will receive an integer counting from 0.", default='left_%d.png')
+    parser.add_argument("-rf", "--rightFilenameFormat", metavar='Filename', help="Pattern for right-camera filenames within the specified folder.  Must have one %%d in it, which will receive an integer counting from 0.", default='right_%d.png')
+    parser.add_argument("-u", "--username", help="Username with which to log into camera")
+    parser.add_argument("-pw", "--password", help="Password with which to log into camera")
+    args = parser.parse_args()
 
-    from auth import USERNAME,PASSWORD # Make a file that defines these two strings
+    if not args.capture and not args.process:
+        print("Need at least one of --capture or --process.")
+        parser.print_help()
+        sys.exit(0)
+    
     # Application settings
     leftUrlPattern = 'http://%s:%s@192.168.0.253/mjpg/video.mjpg'
     rightUrlPattern = 'http://%s:%s@192.168.0.252/mjpg/video.mjpg'
@@ -99,8 +115,8 @@ if __name__ == '__main__':
     print("Press 'c' to process the captured images.")
 
     
-    leftUrl = leftUrlPattern%(USERNAME,PASSWORD)
-    rightUrl = rightUrlPattern%(USERNAME,PASSWORD)
+    leftUrl = leftUrlPattern%(args.username,args.password)
+    rightUrl = rightUrlPattern%(args.username,args.password)
     paths = readStereoData(leftUrl, rightUrl, dataDir)
     if paths is not None:
         print("Got paths: " + repr(paths))
