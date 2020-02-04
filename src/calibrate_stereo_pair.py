@@ -5,25 +5,13 @@ import logging
 logger = logging.getLogger(__name__)
 logger.debug('Importing')
 from datetime import datetime
+import sys
 import os
 import cv2
 import numpy as np
 from stereo_calibrator import StereoCalibrator
+from cal_target_defs import calibrationTargets
 logger.debug('Done')
-
-
-def readVideoStream(url):
-    cap = cv2.VideoCapture(url)
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("No frame.")
-            return
-        cv2.imshow('Video', frame)
-        
-        if cv2.waitKey(1) == 27:
-            return
 
 def readStereoData(leftUrl, rightUrl, savePath):
     """
@@ -75,6 +63,7 @@ def readStereoData(leftUrl, rightUrl, savePath):
         
             
 if __name__ == '__main__':
+    # TODO: add argparse for target idx, username, password, and URL patterns
     logging.basicConfig(level=logging.WARNING)
     logger.setLevel(logging.DEBUG)
     # This is super verbose
@@ -88,7 +77,20 @@ if __name__ == '__main__':
     
     dataDir = datetime.now().strftime(folderNameFormat)
     
-    print("Welcome to stereo pair calibration.  Will connect to (where %s:%s is the username and password):")
+    print("Welcome to stereo pair calibration.  This program can seek the following targets: ")
+    for i,target in enumerate(calibrationTargets):
+        print('%2d: (%2dx%2d) "%s"s'%(i, target['dims'][0],  target['dims'][1], target['desc']))
+    chosenTargetIdx = input("Enter number of target to use: ")
+    try:
+        chosenTargetIdx = int(chosenTargetIdx)
+    except:
+        pass
+    if type(chosenTargetIdx) is int and chosenTargetIdx < len(calibrationTargets):
+        calTarget = calibrationTargets[chosenTargetIdx]
+    else:
+        print("Invalid selection; exiting.")
+        sys.exit(0)
+    print("Will connect to (where %s:%s is the username and password):")
     print("Left cam: %s"%leftUrlPattern)
     print("Right cam: %s"%rightUrlPattern)
     print("Will save data to this directory: %s"%dataDir)
@@ -102,7 +104,7 @@ if __name__ == '__main__':
     paths = readStereoData(leftUrl, rightUrl, dataDir)
     if paths is not None:
         print("Got paths: " + repr(paths))
-        sc = StereoCalibrator()
+        sc = StereoCalibrator(calTarge['dims'], calTarge['dotSpacingMm'],  calTarge['simpleBlobDet'])
         
         stereo_cal = sc.find_stereo_pair_calibration(paths)
         if stereo_cal is not None:
