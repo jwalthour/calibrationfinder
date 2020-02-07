@@ -30,15 +30,15 @@ perfboard24x48BlobParams = cv2.SimpleBlobDetector_Params()
 perfboard24x48BlobParams.minThreshold = 0;
 perfboard24x48BlobParams.maxThreshold = 128;
 perfboard24x48BlobParams.filterByArea = True
-perfboard24x48BlobParams.minArea = 5
+perfboard24x48BlobParams.minArea = 2
 perfboard24x48BlobParams.filterByCircularity = True
-perfboard24x48BlobParams.minCircularity = 0.25
+perfboard24x48BlobParams.minCircularity = 0.75
 perfboard24x48BlobParams.filterByConvexity = False
-perfboard24x48BlobParams.minConvexity = 0.9
+perfboard24x48BlobParams.minConvexity = 0.5
 perfboard24x48BlobParams.maxConvexity = 1
 perfboard24x48BlobParams.filterByInertia = True
 perfboard24x48BlobParams.minInertiaRatio = 0.5
-perfboard24x48BlobParams.minDistBetweenBlobs = 5
+perfboard24x48BlobParams.minDistBetweenBlobs = 1
 perfboard24x48BlobParams.blobColor = 0
 
 # Data structure to import
