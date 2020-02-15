@@ -7,14 +7,17 @@ import cv2.aruco
 import numpy as np
 logger.debug('Done')
 
-class StereoCalibrator:
+class MonoCalibrator:
     def __init__(self, calPatternDims=(8, 8), calDotSpacingMm=(25.877, 25.877), detector=None):
         """
         calPatternDims : (int, int) - the rows,cols indicating the number of dots on the target
         calDotSpacingMm : (float,float) - in x,y, the number of millimeters between dots in x and y
         detector : a cv2.SimpleBlobDetector, or None for the default
         """
-        self._cal_target_dot_det = self.make_detector()
+        if detector is None:
+            self._cal_target_dot_det = self.make_detector()
+        else:
+            self._cal_target_dot_det = detector
         
         # Set up the calibration pattern 
         self._calPatternDims = calPatternDims
@@ -319,7 +322,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.WARNING)
     logger.setLevel(logging.DEBUG)
 
-    sc = StereoCalibrator()
+    sc = MonoCalibrator()
     cal_img_dir = 'test images/2019-10-18 stereo cal images/'
     pair_image_names = [
         ('left/left-00001.png','right/right-00001.png'),
