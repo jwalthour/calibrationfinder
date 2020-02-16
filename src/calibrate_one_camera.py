@@ -157,14 +157,14 @@ if __name__ == '__main__':
                     image = cv2.imread(path)
                     if args.annotate:
                         #1 look for blobs
-                        radius = 1
                         color = (0,0,255)
                         points = calTarget['simpleBlobDet'].detect(image)
                         for point in points:
                             # point is x,y, like : np.array([[697.77185, 396.0037 ]], dtype=float32
                             # logger.debug("point.pt: %s"%repr(point.pt))
-                            cv2.circle(image, (int(point.pt[0]), int(point.pt[1])), radius, color, -1)
+                            cv2.circle(image, (int(point.pt[0]), int(point.pt[1])), int(point.size/2), color)
                         #2 look for target
+                        radius = 1
                         color = (0,255,0)
                         points = np.array([[]])
                         gridType = cv2.CALIB_CB_SYMMETRIC_GRID if calTarget['dims'][0] == calTarget['dims'][1] else cv2.CALIB_CB_ASYMMETRIC_GRID
