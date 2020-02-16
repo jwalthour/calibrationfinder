@@ -78,6 +78,7 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--capture", help="Perform user-interactive image capture prior to processing", action="store_true", default=False)
     parser.add_argument("-p", "--process", help="Process images to compute stereo calibration", action="store_true", default=False)
     parser.add_argument("-a", "--annotate", help="Mark up images of calibration targets", action="store_true", default=False)
+    parser.add_argument("-d", "--debug", help="Display images for debugging", action="store_true", default=False)
     parser.add_argument("-l", "--url", metavar='URL', help="Camera URL pattern, first %%s is replaced with username, second with password", default='http://%s:%s@192.168.0.253/mjpg/video.mjpg')
     parser.add_argument("-fl", "--folderNameFormat", metavar='Folder', help="Folder name full of images.  Will run strftime on this string, so you can use strftime escape characters.", default='stereo_cal_data_%Y-%d-%m_%H-%M-%S')
     parser.add_argument("-fn", "--filenameFormat", metavar='Filename', help="Pattern for filenames within the specified folder.  Must have one %%d in it, which will receive an integer counting from 0.", default='frame_%d.png')
@@ -151,11 +152,32 @@ if __name__ == '__main__':
     if args.process:
         if paths is not None and len(paths) > 0:
             print("Got paths: " + repr(paths))
+            if args.debug:
+                for i,path in enumerate(paths):
+                    image = cv2.imread(path)
+                    if args.annotate:
+                        pass
+                    title = "Input image %d of %d; press escape to skip or any other key to see more."%(i, len(paths))
+                    cv2.imshow(title, image)
+                    key = cv2.waitKey()
+                    cv2.destroyWindow(title)
+                    if key == 27:
+                        break
             mc = MonoCalibrator(calTarget['dims'], calTarget['dotSpacingMm'], calTarget['simpleBlobDet'])
             
             cameraMatrix,distCoeffs = mc.findCameraCalibration(paths)
             if cameraMatrix is not None:
                 print("Have cal: " + repr((cameraMatrix,distCoeffs)))
+                if args.debug:
+                    for i,path in enumerate(paths):
+                        distorted = cv2.imread(path)
+                        undistorted = cv2.undistort(distorted, cameraMatrix, distCoeffs)
+                        title = "Undistorted image %d of %d; press escape to quit or any other key to see more."%(i, len(paths))
+                        cv2.imshow(title, undistorted)
+                        key = cv2.waitKey()
+                        cv2.destroyWindow(title)
+                        if key == 27:
+                            break
             else:
                 print("Failed to find cal.")
         else:
