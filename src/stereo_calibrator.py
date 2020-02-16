@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 logger.debug('Done')
 
-class MonoCalibrator:
+class StereoCalibrator:
     def __init__(self, calPatternDims=(8, 8), calDotSpacingMm=(25.877, 25.877), detector=None):
         """
         calPatternDims : (int, int) - the rows,cols indicating the number of dots on the target
@@ -321,7 +321,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.WARNING)
     logger.setLevel(logging.DEBUG)
 
-    sc = MonoCalibrator()
+    sc = StereoCalibrator()
     cal_img_dir = 'test images/2019-10-18 stereo cal images/'
     pair_image_names = [
         ('left/left-00001.png','right/right-00001.png'),

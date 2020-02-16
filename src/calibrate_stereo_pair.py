@@ -73,7 +73,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Capture and/or process stereo calibration data.')
     parser.add_argument("-c", "--capture", help="Perform user-interactive image capture prior to processing", action="store_true", default=False)
     parser.add_argument("-p", "--process", help="Process images to compute stereo calibration", action="store_true", default=False)
-    parser.add_argument("-l", "--leftUrl", metavar='URL', help="Left camera URL pattern, first %%s is replaced with username, second with password", default='http://%s:%s@192.168.0.253/mjpg/video.mjpg')
+    parser.add_argument("-l", "--leftUrl", metavar='URL', help="Left camera URL pattern, first %s is replaced with username, second with password", default='http://%s:%s@192.168.0.253/mjpg/video.mjpg')
     parser.add_argument("-r", "--rightUrl", metavar='URL', help="Right camera URL pattern, first %%s is replaced with username, second with password", default='http://%s:%s@192.168.0.252/mjpg/video.mjpg')
     parser.add_argument("-f", "--folderNameFormat", metavar='Folder', help="Folder name full of images.  Will run strftime on this string, so you can use strftime escape characters.", default='stereo_cal_data_%Y-%m-%d_%H-%M-%S')
     parser.add_argument("-lf", "--leftFilenameFormat", metavar='Filename', help="Pattern for left-camera filenames within the specified folder.  Must have one %%d in it, which will receive an integer counting from 0.", default='left_%d.png')

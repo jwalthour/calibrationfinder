@@ -3,7 +3,7 @@ User-interactive camera calibration capture and computation application
 
 Example command lines:
     python src\calibrate_one_camera.py -p -t 1 -fl "test images\2020-14-02 24x48 with original glossy finish" -fn "left_%i.png"
-    python src\calibrate_one_camera.py -p -t 0 -fl "test images\2019-10-18 stereo cal images\left" -fn "left_%05d.png"
+    python src\calibrate_one_camera.py -p -t 0 -fl "test images\2019-10-18 stereo cal images\left" -fn "left-%05d.png"
 """
 import logging
 logger = logging.getLogger(__name__)
