@@ -38,8 +38,8 @@ perfboard24x48BlobParams.filterByConvexity = True
 perfboard24x48BlobParams.minConvexity = 1
 perfboard24x48BlobParams.maxConvexity = 100
 perfboard24x48BlobParams.filterByInertia = True
-perfboard24x48BlobParams.minInertiaRatio = 0.5
-perfboard24x48BlobParams.minDistBetweenBlobs = 1
+perfboard24x48BlobParams.minInertiaRatio = 0.6
+perfboard24x48BlobParams.minDistBetweenBlobs = 5
 perfboard24x48BlobParams.blobColor = 0
 
 # Data structure to import
