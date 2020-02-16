@@ -1,5 +1,9 @@
 """
-User-interactive stereo calibration capture and computation application
+User-interactive camera calibration capture and computation application
+
+Example command lines:
+    python src\calibrate_one_camera.py -p -t 1 -fl "test images\2020-14-02 24x48 with original glossy finish" -fn "left_%i.png"
+    python src\calibrate_one_camera.py -p -t 0 -fl "test images\2019-10-18 stereo cal images\left" -fn "left_%05d.png"
 """
 import logging
 logger = logging.getLogger(__name__)
@@ -10,7 +14,7 @@ import os
 import cv2
 import argparse
 import numpy as np
-from stereo_calibrator import StereoCalibrator
+from mono_calibrator import MonoCalibrator
 from cal_target_defs import calibrationTargets
 logger.debug('Done')
 
@@ -68,16 +72,15 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.WARNING)
     logger.setLevel(logging.DEBUG)
     # This is super verbose
-    logging.getLogger('stereo_calibrator').setLevel(logging.DEBUG)
+    logging.getLogger('mono_calibrator').setLevel(logging.DEBUG)
     
     parser = argparse.ArgumentParser(description='Capture and/or process stereo calibration data.')
     parser.add_argument("-c", "--capture", help="Perform user-interactive image capture prior to processing", action="store_true", default=False)
     parser.add_argument("-p", "--process", help="Process images to compute stereo calibration", action="store_true", default=False)
-    parser.add_argument("-l", "--leftUrl", metavar='URL', help="Left camera URL pattern, first %%s is replaced with username, second with password", default='http://%s:%s@192.168.0.253/mjpg/video.mjpg')
-    parser.add_argument("-r", "--rightUrl", metavar='URL', help="Right camera URL pattern, first %%s is replaced with username, second with password", default='http://%s:%s@192.168.0.252/mjpg/video.mjpg')
-    parser.add_argument("-f", "--folderNameFormat", metavar='Folder', help="Folder name full of images.  Will run strftime on this string, so you can use strftime escape characters.", default='stereo_cal_data_%Y-%d-%m_%H-%M-%S')
-    parser.add_argument("-lf", "--leftFilenameFormat", metavar='Filename', help="Pattern for left-camera filenames within the specified folder.  Must have one %%d in it, which will receive an integer counting from 0.", default='left_%d.png')
-    parser.add_argument("-rf", "--rightFilenameFormat", metavar='Filename', help="Pattern for right-camera filenames within the specified folder.  Must have one %%d in it, which will receive an integer counting from 0.", default='right_%d.png')
+    parser.add_argument("-a", "--annotate", help="Mark up images of calibration targets", action="store_true", default=False)
+    parser.add_argument("-l", "--url", metavar='URL', help="Camera URL pattern, first %%s is replaced with username, second with password", default='http://%s:%s@192.168.0.253/mjpg/video.mjpg')
+    parser.add_argument("-fl", "--folderNameFormat", metavar='Folder', help="Folder name full of images.  Will run strftime on this string, so you can use strftime escape characters.", default='stereo_cal_data_%Y-%d-%m_%H-%M-%S')
+    parser.add_argument("-fn", "--filenameFormat", metavar='Filename', help="Pattern for filenames within the specified folder.  Must have one %%d in it, which will receive an integer counting from 0.", default='frame_%d.png')
     parser.add_argument("-u", "--username", help="Username with which to log into camera")
     parser.add_argument("-pw", "--password", help="Password with which to log into camera")
     parser.add_argument("-t", "--target", metavar="index", help="Calibration target index (omit for user-interactive)")
@@ -89,11 +92,7 @@ if __name__ == '__main__':
         sys.exit(0)
     
     # Application settings
-    # leftUrlPattern = 'http://%s:%s@192.168.0.253/mjpg/video.mjpg'
-    # rightUrlPattern = 'http://%s:%s@192.168.0.252/mjpg/video.mjpg'
-    # folderNameFormat = 'stereo_cal_data_%Y-%d-%m_%H-%M-%S'
-    leftUrlPattern = args.leftUrl
-    rightUrlPattern = args.rightUrl
+    urlPattern = args.url
     folderNameFormat = args.folderNameFormat
     
     dataDir = datetime.now().strftime(folderNameFormat)
@@ -121,9 +120,7 @@ if __name__ == '__main__':
                 sys.exit(0)
         calTarget = calibrationTargets[chosenTargetIdx]
     if args.capture:
-        print("Will connect to (where %s:%s is the username and password):")
-        print("Left cam: %s"%leftUrlPattern)
-        print("Right cam: %s"%rightUrlPattern)
+        print("Will connect to (where %s:%s is the username and password):" + "%s"%urlPattern)
         print("Will save data to this directory: %s"%dataDir)
         print("During video stream, press the 's' key when the image is clear, the scene is stationary, and the target is visible in both images.")
         print("Press escape to exit.")
@@ -131,12 +128,11 @@ if __name__ == '__main__':
             print("Press 'c' to process the captured images.")
 
     
-        leftUrl = leftUrlPattern%(args.username,args.password)
-        rightUrl = rightUrlPattern%(args.username,args.password)
-        paths = readStereoData(leftUrl, rightUrl, dataDir, args.leftFilenameFormat, args.rightFilenameFormat)
+        url = urlPattern%(args.username,args.password)
+        # paths = readStereoData(leftUrl, rightUrl, dataDir, args.leftFilenameFormat, args.rightFilenameFormat)
     else:
         # Look through the indicated directory to find files
-        allFilesInDir = [f for f in os.listdir(dataDir) if os.path.isfile(os.path.join(dataDir, f))]
+        # allFilesInDir = [f for f in os.listdir(dataDir) if os.path.isfile(os.path.join(dataDir, f))]
         # print("allFilesInDir: " + repr(allFilesInDir))
         # We expect a pretty strict filename format here. 
         # Stop looping as soon as we run out of files.
@@ -144,23 +140,22 @@ if __name__ == '__main__':
         i = 0
         paths = []
         while keepLooking:
-            leftPath = os.path.join(dataDir, args.leftFilenameFormat%i)
-            rightPath = os.path.join(dataDir, args.rightFilenameFormat%i)
-            if os.path.isfile(leftPath) and os.path.isfile(rightPath):
-                paths += [(leftPath, rightPath)]
-                i += 1
-            else:
+            filePath = os.path.join(dataDir, args.filenameFormat%i)
+            if os.path.isfile(filePath):
+                paths += [filePath]
+            elif i > 0:
                 keepLooking = False
-        print("Found %d stereo pairs in %s."%(i, dataDir))
+            i += 1
+        print("Found %d input files in %s."%(len(paths), dataDir))
 
     if args.process:
         if paths is not None and len(paths) > 0:
             print("Got paths: " + repr(paths))
-            sc = StereoCalibrator(calTarget['dims'], calTarget['dotSpacingMm'], calTarget['simpleBlobDet'])
+            mc = MonoCalibrator(calTarget['dims'], calTarget['dotSpacingMm'], calTarget['simpleBlobDet'])
             
-            stereo_cal = sc.find_stereo_pair_calibration(paths)
-            if stereo_cal is not None:
-                print("Have cal: " + repr(stereo_cal))
+            cameraMatrix,distCoeffs = mc.findCameraCalibration(paths)
+            if cameraMatrix is not None:
+                print("Have cal: " + repr((cameraMatrix,distCoeffs)))
             else:
                 print("Failed to find cal.")
         else:
