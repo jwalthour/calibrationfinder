@@ -2,8 +2,8 @@
 User-interactive camera calibration capture and computation application
 
 Example command lines:
-    python src\calibrate_one_camera.py -p -t 1 -fl "test images\2020-14-02 24x48 with original glossy finish" -fn "left_%i.png"
-    python src\calibrate_one_camera.py -p -t 0 -fl "test images\2019-10-18 stereo cal images\left" -fn "left-%05d.png"
+    python src\calibrate_one_camera.py -p -d -a -t 1 -fl "test images\2020-14-02 24x48 with original glossy finish" -fn "left_%i.png"
+    python src\calibrate_one_camera.py -p -d -a -t 0 -fl "test images\2019-10-18 stereo cal images\left" -fn "left-%05d.png"
 """
 import logging
 logger = logging.getLogger(__name__)
@@ -158,22 +158,24 @@ if __name__ == '__main__':
                     if args.annotate:
                         #1 look for blobs
                         color = (0,0,255)
+                        print('Finding blobs...')
                         points = calTarget['simpleBlobDet'].detect(image)
                         for point in points:
                             # point is x,y, like : np.array([[697.77185, 396.0037 ]], dtype=float32
                             # logger.debug("point.pt: %s"%repr(point.pt))
                             cv2.circle(image, (int(point.pt[0]), int(point.pt[1])), int(point.size/2), color)
-                        #2 look for target
-                        radius = 1
-                        color = (0,255,0)
-                        points = np.array([[]])
-                        gridType = cv2.CALIB_CB_SYMMETRIC_GRID if calTarget['dims'][0] == calTarget['dims'][1] else cv2.CALIB_CB_ASYMMETRIC_GRID
-                        found,points = cv2.findCirclesGrid(image, calTarget['dims'], points, gridType, calTarget['simpleBlobDet'])
-                        if found:
-                            for point in points:
-                                # point is x,y, like : np.array([[697.77185, 396.0037 ]], dtype=float32
-                                # logger.debug("point: %s"%repr(point))
-                                cv2.circle(image, tuple(point[0]), radius, color, -1)
+                        # #2 look for target
+                        # radius = 1
+                        # color = (0,255,0)
+                        # points = np.array([[]])
+                        # gridType = cv2.CALIB_CB_SYMMETRIC_GRID if calTarget['dims'][0] == calTarget['dims'][1] else cv2.CALIB_CB_ASYMMETRIC_GRID
+                        # print('Checking for target...')
+                        # found,points = cv2.findCirclesGrid(image, calTarget['dims'], points, gridType, calTarget['simpleBlobDet'])
+                        # if found:
+                        #     for point in points:
+                        #         # point is x,y, like : np.array([[697.77185, 396.0037 ]], dtype=float32
+                        #         # logger.debug("point: %s"%repr(point))
+                        #         cv2.circle(image, tuple(point[0]), radius, color, -1)
                     title = "Input image %d of %d; press escape to skip or any other key to see more."%(i, len(paths))
                     cv2.imshow(title, image)
                     key = cv2.waitKey()
@@ -181,7 +183,7 @@ if __name__ == '__main__':
                     if key == 27:
                         break
             mc = MonoCalibrator(calTarget['dims'], calTarget['dotSpacingMm'], calTarget['simpleBlobDet'])
-            
+            print('Finding calibration...')
             cameraMatrix,distCoeffs = mc.findCameraCalibration(paths)
             if cameraMatrix is not None:
                 print("Have cal: " + repr((cameraMatrix,distCoeffs)))
