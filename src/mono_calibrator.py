@@ -107,7 +107,8 @@ class MonoCalibrator:
             # point is x,y, like : np.array([[697.77185, 396.0037 ]], dtype=float32
             # logger.debug("point: %s"%repr(point))
             cv2.circle(image, tuple(point[0]), radius, color, -1)
-            cv2.putText(image, '%d'%i, tuple(point[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.33, color)
+            if drawNums:
+                cv2.putText(image, '%d'%i, tuple(point[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.33, color)
             i += 1
     
     def _findPointVectors(self, image_paths, rowCol=False):
@@ -128,7 +129,8 @@ class MonoCalibrator:
                 logger.warning("Couldn't open indicated input file %s."%image_path)
             else:
                 points = np.array([[]])
-                found,points = cv2.findCirclesGrid(img, self._calPatternDims, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._calTargetDotDetector)
+                gridType = cv2.CALIB_CB_SYMMETRIC_GRID if self._calPatternDims[0] == self._calPatternDims[1] else cv2.CALIB_CB_ASYMMETRIC_GRID
+                found,points = cv2.findCirclesGrid(img, self._calPatternDims, points, gridType, self._calTargetDotDetector)
                 if found:
                     # logger.debug("points.shape: %s"%repr(points.shape))
                     points = points[:,0,:] # This doesn't seem to actually change anything, it seems to be just a spare dimension?
