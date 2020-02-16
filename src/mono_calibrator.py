@@ -124,23 +124,26 @@ class MonoCalibrator:
         first_loop = True
         for image_path in image_paths:
             img = cv2.imread(image_path)
-            points = np.array([[]])
-            found,points = cv2.findCirclesGrid(img, self._calPatternDims, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._calTargetDotDetector)
-            if found:
-                # logger.debug("points.shape: %s"%repr(points.shape))
-                points = points[:,0,:] # This doesn't seem to actually change anything, it seems to be just a spare dimension?
-                # findCirclesGrid returns x,y convention.  Convert to row,col
-                if rowCol:
-                    points = points[:,[1,0]]
-                # logger.debug("points.shape: %s"%repr(points.shape))
-                # logger.debug(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
-                allPointsInImages += [points]
-                allPointsIn3space += [self._cal3spacePattern]
-                
-                # self.drawPointsOnImage(img, points)
-                # cv2.imshow(image_path, img)
+            if img is None:
+                logger.warning("Couldn't open indicated input file %s."%image_path)
             else:
-                logger.warning("Didn't find calibration pattern in this image: %s"%image_path)
+                points = np.array([[]])
+                found,points = cv2.findCirclesGrid(img, self._calPatternDims, points, cv2.CALIB_CB_SYMMETRIC_GRID, self._calTargetDotDetector)
+                if found:
+                    # logger.debug("points.shape: %s"%repr(points.shape))
+                    points = points[:,0,:] # This doesn't seem to actually change anything, it seems to be just a spare dimension?
+                    # findCirclesGrid returns x,y convention.  Convert to row,col
+                    if rowCol:
+                        points = points[:,[1,0]]
+                    # logger.debug("points.shape: %s"%repr(points.shape))
+                    # logger.debug(("Found " + str(len(points)) + " cal points in " + image_path) if found else "No cal pattern found in " + image_path)
+                    allPointsInImages += [points]
+                    allPointsIn3space += [self._cal3spacePattern]
+                    
+                    # self.drawPointsOnImage(img, points)
+                    # cv2.imshow(image_path, img)
+                else:
+                    logger.warning("Didn't find calibration pattern in this image: %s"%image_path)
         # cv2.waitKey()
         
         return allPointsIn3space, allPointsInImages
@@ -188,19 +191,28 @@ if __name__ == '__main__':
     lCameraMatrix, lDistCoeffs = mc.findCameraCalibration(left_paths)
     rCameraMatrix, rDistCoeffs = mc.findCameraCalibration(right_paths)
     
-    
+    def loopShowUndistort(paths, cameraMatrix, distCoeffs, title='Press enter for next, escape for skip'):
+        for path in left_paths:
+            distorted = cv2.imread(path)
+            undistorted = cv2.undistort(distorted, cameraMatrix, distCoeffs)
+            cv2.imshow(title, undistorted)
+            key = cv2.waitKey()
+            if key == 27:
+                return
+
     # Test/debug
     if lDistCoeffs is not None:
         logger.info("Got left calibration.")
-        #undistort
-        
+        loopShowUndistort(left_paths, lCameraMatrix, lDistCoeffs, "Left camera; press escape to see right camera, any other key to see other images.")
     else:
         # Debug
-        logger.info("Failed to calibrate left camera.")
+        logger.info("Failed to calibrate left camera; will step through with dots shown.")
+        
+        # 
+
     if rDistCoeffs is not None:
         logger.info("Got right calibration.")
-        #undistort
-        
+        loopShowUndistort(right_paths, rCameraMatrix, rDistCoeffs, "Right camera; press escape to quit, any other key to see other images.")
     else:
         # Debug
         logger.info("Failed to calibrate right camera.")
